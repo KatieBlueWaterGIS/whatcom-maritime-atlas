@@ -110,3 +110,18 @@
   object-fit:contain;
 }
 .hub-seafood>img{width:60px;height:60px;flex-basis:60px}
+
+
+/* ===== V12 NAVIGATION, FILTER + TIDES ICON REFINEMENTS ===== */
+.theme-symbol svg,.card-theme-icon svg{width:30px;height:30px;display:block}.theme-chip .theme-symbol{display:grid;place-items:center}.card-theme-icon{display:grid;place-items:center}.story-thumb .card-theme-icon svg{width:36px;height:36px}
+.filter-control.chip-mode select{display:none!important}.filter-control.chip-mode .filter-chips{display:flex!important}.filters-backdrop{display:none}.memory-filter-done{display:none;width:100%;margin-top:10px;padding:11px;border:1px solid var(--teal);border-radius:7px;background:#fffaf1;color:var(--teal);font-weight:800;cursor:pointer}.filter-toggle-label{margin-left:4px}
+@media(max-width:780px){
+  .filters-mobile{display:inline-flex!important;align-items:center;gap:5px;background:#0b6f78!important;color:#fff!important;border-color:#0b6f78!important;font-weight:800;box-shadow:0 3px 10px rgba(4,31,47,.18)}
+  .filters-backdrop{display:block;position:fixed;inset:58px 0 0;z-index:1190;background:rgba(4,31,47,.42);opacity:0;pointer-events:none;transition:opacity .2s ease}
+  .filters-backdrop.open{opacity:1;pointer-events:auto}
+  .memory-filters{z-index:1200;width:min(88vw,350px);padding-bottom:calc(18px + env(safe-area-inset-bottom));overflow-y:auto}
+  .filter-title-row{position:sticky;top:-1px;z-index:3;background:#faf4e8;padding-top:4px;padding-bottom:8px}
+  .filter-title-row button{display:grid!important;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;border:0;font-size:25px}
+  .memory-filter-done{display:block;position:sticky;bottom:0;background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 -6px 16px rgba(250,244,232,.95)}
+  body.filters-open{overflow:hidden}
+}

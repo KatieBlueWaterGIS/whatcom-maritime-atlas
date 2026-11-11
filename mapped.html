@@ -37,7 +37,7 @@
       </div>
     </div>
     <div class="memories-actions">
-      <button class="memory-action filters-mobile" id="filtersToggle" type="button" aria-label="Open filters" title="Filters">☰ <span id="filterCount"></span></button>
+      <button class="memory-action filters-mobile" id="filtersToggle" type="button" aria-label="Open filters" title="Filters"><span class="filter-toggle-icon">☰</span><span class="filter-toggle-label">Filters</span> <span id="filterCount"></span></button>
       <button class="memory-action" id="mysteryBtn" type="button">? Mystery Photo</button>
       <button class="memory-action" id="thenNowExploreBtn" type="button">↔ Then + Now</button>
       <button class="memory-action contribute" id="contributeBtn" type="button">＋ Share & Contribute</button>
@@ -45,6 +45,7 @@
   </section>
 
   <section class="memories-workspace">
+    <div class="filters-backdrop" id="filtersBackdrop" aria-hidden="true"></div>
     <aside class="memory-filters" id="filtersPanel" aria-label="Map filters">
       <div class="filter-title-row"><div><span>FILTER MAP</span><small id="resultCount">Loading collection…</small></div><button id="filtersClose" aria-label="Close filters">×</button></div>
       <label class="memory-search-label">Search
@@ -60,6 +61,7 @@
         <label><input type="checkbox" id="thenNowOnly" /> Then + now available</label>
       </fieldset>
       <button class="memory-clear" id="clearFilters" type="button">Clear All Filters</button>
+      <button class="memory-filter-done" id="filtersDone" type="button">Done</button>
     </aside>
 
     <div class="memory-map-wrap">

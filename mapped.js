@@ -80,13 +80,20 @@ async function populateDistinct(selectId, field){
     const vals=[...new Set(fs.features.map(f=>f.attributes[actual]).filter(v=>v!==null && v!==''))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
     const sel=$(selectId); vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
     if(vals.length>0 && vals.length<5) makeChipFilter(selectId,vals);
+    else clearChipFilter(selectId);
     return vals;
   }catch(e){ console.warn('Distinct query failed:',field,e); return []; }
+}
+function clearChipFilter(selectId){
+  const sel=$(selectId), box=$(`${selectId}Chips`); if(!sel||!box) return;
+  sel.hidden=false; box.hidden=true; box.innerHTML='';
+  sel.closest('.filter-control')?.classList.remove('chip-mode');
 }
 function makeChipFilter(selectId,values){
   const sel=$(selectId), box=$(`${selectId}Chips`); if(!sel||!box) return;
   sel.hidden=true; box.hidden=false;
-  const allText=sel.options[0]?.textContent?.replace(/^All\s+/i,'All') || 'All';
+  sel.closest('.filter-control')?.classList.add('chip-mode');
+  const allText=(sel.options[0]?.textContent || 'All').trim();
   const items=[['',allText],...values.map(v=>[String(v),String(v)])];
   box.innerHTML=items.map(([v,t],i)=>`<button type="button" class="filter-chip${i===0?' active':''}" data-value="${String(v).replaceAll('&','&amp;').replaceAll('"','&quot;')}">${t}</button>`).join('');
   box.addEventListener('click',e=>{
@@ -193,10 +200,19 @@ async function initMap(){
 ['eraFilter','mediaFilter','themeFilter','areaFilter','collectionFilter','mysteryOnly','thenNowOnly'].forEach(id=>$(id).addEventListener('change',applyFilters));
 let timer;$('memorySearch').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(applyFilters,280)});
 $('clearFilters').onclick=()=>{['eraFilter','mediaFilter','themeFilter','areaFilter','collectionFilter'].forEach(id=>{$(id).value='';syncChip(id)});$('memorySearch').value='';$('mysteryOnly').checked=false;$('thenNowOnly').checked=false;applyFilters()};
-$('filtersToggle').onclick=()=>$('filtersPanel').classList.toggle('open');$('filtersClose').onclick=()=>$('filtersPanel').classList.remove('open');
+function setFiltersOpen(open){
+  $('filtersPanel').classList.toggle('open',open);
+  $('filtersBackdrop')?.classList.toggle('open',open);
+  $('filtersBackdrop')?.setAttribute('aria-hidden',String(!open));
+  document.body.classList.toggle('filters-open',open);
+}
+$('filtersToggle').onclick=()=>setFiltersOpen(true);
+$('filtersClose').onclick=()=>setFiltersOpen(false);
+$('filtersDone').onclick=()=>setFiltersOpen(false);
+$('filtersBackdrop').onclick=()=>setFiltersOpen(false);
 $('mysteryBtn').onclick=chooseMystery;$('nextMystery').onclick=chooseMystery;$('thenNowExploreBtn').onclick=chooseThenNow;$('nextThenNow').onclick=chooseThenNow;$('contributeBtn').onclick=()=>openContribute();$('thenNowBtn').onclick=openThenNow;
 $('thenNowOnMap').onclick=()=>{closeModal('thenNowModal');const g=state.selected;if(g?.geometry)state.mapEl.goTo({target:g.geometry,zoom:17},{duration:650});};
 $('resetMap').onclick=()=>state.originalViewpoint&&state.mapEl?.goTo(state.originalViewpoint,{duration:600});$('thenNowSlider').addEventListener('input',e=>updateSlider(+e.target.value));updateSlider(50);
 document.querySelectorAll('[data-close-modal]').forEach(x=>x.onclick=()=>closeModal('thenNowModal'));document.querySelectorAll('[data-close-mystery]').forEach(x=>x.onclick=()=>closeModal('mysteryModal'));document.querySelectorAll('[data-close-contribute]').forEach(x=>x.onclick=()=>closeModal('contributeModal'));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('thenNowModal');closeModal('mysteryModal');closeModal('contributeModal');$('filtersPanel').classList.remove('open')}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('thenNowModal');closeModal('mysteryModal');closeModal('contributeModal');setFiltersOpen(false)}});
 customElements.whenDefined('arcgis-map').then(initMap);

@@ -11,3 +11,12 @@ This build is ready to upload directly to the root of the `whatcom-maritime-atla
 
 ## Upload
 Upload **all files in this folder** to the repository root and overwrite files with the same names. Ensure `icon-seafood.svg` is included.
+
+
+## v12 changes
+- Fixed Tides header Mapped Memories navigation.
+- Added branded theme-specific Tides map markers and a fishing-vessel Boatbuilding icon.
+- Fixed duplicate dropdown/chip filters in Mapped Memories.
+- Preserved spaces in All Media / All Themes chip labels.
+- Restored and strengthened the mobile Filters control with backdrop, close, and Done controls.
+- Replaced the Local Seafood icon with a cleaner line-art fish.

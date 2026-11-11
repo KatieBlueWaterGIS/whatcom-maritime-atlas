@@ -164,15 +164,58 @@ function sortGraphics(graphics) {
   });
 }
 
-function themeIcon(label) {
+function themeType(label) {
   const l = String(label || "").toLowerCase();
-  if (l.includes("fish") || l.includes("cann")) return "🐟";
-  if (l.includes("lumber") || l.includes("timber")) return "🌲";
-  if (l.includes("boat")) return "⛵";
-  if (l.includes("orca") || l.includes("environment")) return "🐋";
-  return "✥";
+  if (l.includes("fish") || l.includes("cann")) return "fishing";
+  if (l.includes("lumber") || l.includes("timber")) return "lumber";
+  if (l.includes("boat")) return "boatbuilding";
+  if (l.includes("orca") || l.includes("environment")) return "orca";
+  return "other";
 }
 
+function iconSvg(type, circle = false) {
+  const bg = {fishing:"#0b6f78", lumber:"#7d713c", boatbuilding:"#b2752c", orca:"#355f7c", other:"#0b6f78"}[type] || "#0b6f78";
+  const wrapStart = circle ? `<circle cx="32" cy="32" r="30" fill="${bg}"/>` : '';
+  const stroke = circle ? '#fff' : 'currentColor';
+  const common = `fill="none" stroke="${stroke}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"`;
+  let art = '';
+  if(type === 'boatbuilding') art = `<path ${common} d="M12 38h40l-5 9c-2 4-6 6-11 6H24c-5 0-9-2-11-6l-4-6z"/><path ${common} d="M21 38V27h18l7 11M27 27v-8h10v8M32 19V10M32 10l10 6H32"/>`;
+  else if(type === 'fishing') art = `<path ${common} d="M13 32c8-10 18-14 30-8l8-7-1 11 1 11-8-7c-12 6-22 2-30-8z"/><circle cx="24" cy="29" r="1.8" fill="${stroke}" stroke="none"/>`;
+  else if(type === 'lumber') art = `<path ${common} d="M32 10 20 27h7L17 42h11v12h8V42h11L37 27h7z"/>`;
+  else if(type === 'orca') art = `<path ${common} d="M10 35c10-12 22-16 38-9l7-7-2 12 2 9-8-4c-5 8-15 13-27 10-6-2-9-6-10-11z"/><path ${common} d="M32 24c1-7 5-11 9-13-1 7-4 11-9 13z"/><path d="M25 29c4-3 8-3 11 0-3 4-7 5-11 0z" fill="${stroke}" stroke="none"/>`;
+  else art = `<path ${common} d="M32 11v42M11 32h42M18 18l28 28M46 18 18 46"/>`;
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">${wrapStart}${art}</svg>`;
+}
+
+function themeIconMarkup(label) { return iconSvg(themeType(label), false); }
+function themeMarkerUrl(label) {
+  const svg = iconSvg(themeType(label), true);
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+async function applyTidesRenderer() {
+  if (!storyLayer || !fieldMap.theme || storyLayer.geometryType !== 'point') return;
+  try {
+    const [UniqueValueRenderer, PictureMarkerSymbol] = await Promise.all([
+      $arcgis ? $arcgis.import('@arcgis/core/renderers/UniqueValueRenderer.js') : Promise.reject() ,
+      $arcgis ? $arcgis.import('@arcgis/core/symbols/PictureMarkerSymbol.js') : Promise.reject()
+    ]);
+    const values = [...new Map(allGraphics.map(g => [String(g.attributes?.[fieldMap.theme] ?? ''), getTheme(g)])).entries()].filter(([v]) => v);
+    storyLayer.renderer = new UniqueValueRenderer({
+      field: fieldMap.theme,
+      defaultSymbol: new PictureMarkerSymbol({url:themeMarkerUrl('other'),width:30,height:30}),
+      uniqueValueInfos: values.map(([value,label]) => ({value,label,symbol:new PictureMarkerSymbol({url:themeMarkerUrl(label),width:32,height:32})}))
+    });
+  } catch (e) {
+    // 4.x AMD build fallback below.
+    try {
+      require(['esri/renderers/UniqueValueRenderer','esri/symbols/PictureMarkerSymbol'], (UniqueValueRenderer, PictureMarkerSymbol) => {
+        const values = [...new Map(allGraphics.map(g => [String(g.attributes?.[fieldMap.theme] ?? ''), getTheme(g)])).entries()].filter(([v]) => v);
+        storyLayer.renderer = new UniqueValueRenderer({field:fieldMap.theme, defaultSymbol:new PictureMarkerSymbol({url:themeMarkerUrl('other'),width:'30px',height:'30px'}), uniqueValueInfos:values.map(([value,label])=>({value,label,symbol:new PictureMarkerSymbol({url:themeMarkerUrl(label),width:'32px',height:'32px'})}))});
+      });
+    } catch(err) { console.warn('Could not override Tides symbology; retaining Web Map renderer.', err); }
+  }
+}
 function buildThemeFilters() {
   dom.themeFilter.querySelectorAll(".theme-chip:not([data-theme='all'])").forEach(el => el.remove());
   uniqueThemes(allGraphics).forEach(([key, label]) => {
@@ -180,7 +223,7 @@ function buildThemeFilters() {
     button.className = "theme-chip";
     button.type = "button";
     button.dataset.theme = key;
-    button.innerHTML = `<span class="theme-symbol">${themeIcon(label)}</span><span><strong>${escapeHtml(label)}</strong><small>Explore this storyline</small></span>`;
+    button.innerHTML = `<span class="theme-symbol">${themeIconMarkup(label)}</span><span><strong>${escapeHtml(label)}</strong><small>Explore this storyline</small></span>`;
     dom.themeFilter.appendChild(button);
   });
 }
@@ -203,7 +246,7 @@ function renderStories() {
 
     node.querySelector(".theme-pill").textContent = getTheme(graphic);
     const cardIcon = node.querySelector(".card-theme-icon");
-    if (cardIcon) cardIcon.textContent = themeIcon(getTheme(graphic));
+    if (cardIcon) cardIcon.innerHTML = themeIconMarkup(getTheme(graphic));
     node.querySelector(".story-number").textContent = String(index + 1).padStart(2, "0");
     node.querySelector("h4").textContent = getTitle(graphic);
     node.querySelector(".story-description").textContent = getDescription(graphic);
@@ -356,6 +399,7 @@ async function initArcGIS() {
         orderByFields: fieldMap.sort ? [fieldMap.sort] : undefined
       });
       allGraphics = result.features || [];
+      await applyTidesRenderer();
       storyLayerView = await mapView.whenLayerView(storyLayer);
 
       buildThemeFilters();
