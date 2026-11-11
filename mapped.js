@@ -2,7 +2,7 @@ const WEBMAP_ID = '077054926df6434f8662cf8850e3c100';
 const SERVICE_ROOT = 'https://services2.arcgis.com/VmLllxPKgIzlr2id/arcgis/rest/services/Mapped_Memories_Full_Schema/FeatureServer';
 const MAPPED_LAYER_URL = `${SERVICE_ROOT}/5`; // verified live layer
 
-const state = { layer:null, mapEl:null, fields:new Set(), fieldAliases:new Map(), selected:null, mysterySelected:null, originalViewpoint:null };
+const state = { layer:null, mapEl:null, view:null, fields:new Set(), fieldAliases:new Map(), selected:null, mysterySelected:null, originalViewpoint:null, overlapFeatures:[], overlapIndex:0 };
 const $ = (id)=>document.getElementById(id);
 const esc = (v)=>String(v ?? '').replaceAll("'","''");
 const truthy = (v)=> ['yes','true','1','y'].includes(String(v ?? '').trim().toLowerCase());
@@ -187,8 +187,62 @@ function fillDetailFields(prefix,d){
     metaRow('Tags',d.tags)
   ].join('');
 }
-async function selectFeature(graphic){
-  if(!graphic)return; state.selected=graphic; const a=graphic.attributes||{},d=detailData(a);
+
+function ensureOverlapNav(){
+  let nav=$('memoryOverlapNav');
+  if(nav)return nav;
+  nav=document.createElement('div');
+  nav.id='memoryOverlapNav';
+  nav.className='memory-overlap-nav';
+  nav.innerHTML='<button type="button" id="memoryOverlapPrev" aria-label="Previous memory">‹</button><div class="memory-overlap-count"><strong>Multiple memories here</strong><span id="memoryOverlapCount"></span></div><button type="button" id="memoryOverlapNext" aria-label="Next memory">›</button>';
+  const copy=document.querySelector('.memory-detail-copy');
+  copy?.insertBefore(nav,copy.firstChild);
+  $('memoryOverlapPrev').onclick=()=>showOverlapAt((state.overlapIndex-1+state.overlapFeatures.length)%state.overlapFeatures.length);
+  $('memoryOverlapNext').onclick=()=>showOverlapAt((state.overlapIndex+1)%state.overlapFeatures.length);
+  return nav;
+}
+function updateOverlapNav(){
+  const nav=ensureOverlapNav();
+  const n=state.overlapFeatures.length;
+  nav.classList.toggle('visible',n>1);
+  if(n>1)$('memoryOverlapCount').textContent=`${state.overlapIndex+1} of ${n}`;
+}
+async function showOverlapAt(index){
+  if(!state.overlapFeatures.length)return;
+  state.overlapIndex=index;
+  await selectFeature(state.overlapFeatures[index],{preserveOverlap:true});
+  updateOverlapNav();
+}
+async function featuresNearClick(event){
+  if(!state.layer||!state.view||!event?.mapPoint)return [];
+  try{
+    const q=state.layer.createQuery();
+    q.where=activeWhere();
+    q.geometry=event.mapPoint;
+    const metersPerPixel=Number(state.view.resolution)||2;
+    q.distance=Math.max(30,metersPerPixel*22);
+    q.units='meters';
+    q.spatialRelationship='intersects';
+    q.outFields=['*'];
+    q.returnGeometry=true;
+    q.num=100;
+    const fs=await state.layer.queryFeatures(q);
+    const click={x:event.x,y:event.y};
+    return (fs.features||[])
+      .map(f=>{const pt=state.view.toScreen(f.geometry);return {f,d:pt?Math.hypot(pt.x-click.x,pt.y-click.y):Infinity};})
+      .filter(x=>x.d<=34)
+      .sort((a,b)=>a.d-b.d)
+      .map(x=>x.f);
+  }catch(e){
+    console.warn('Nearby-feature query failed.',e);
+    return [];
+  }
+}
+
+async function selectFeature(graphic,options={}){
+  if(!graphic)return;
+  if(!options.preserveOverlap){state.overlapFeatures=[];state.overlapIndex=0;}
+  state.selected=graphic; const a=graphic.attributes||{},d=detailData(a);
   if(!d.image || d.image===imgFallback) d.image=await attachmentImageUrl(graphic) || imgFallback;
   const hasPair=truthy(val(a,'then_now_available'))&&d.pair;
   // Universal immersive viewer for desktop + mobile
@@ -196,9 +250,9 @@ async function selectFeature(graphic){
   $('detailThenNowBtn').hidden=!hasPair;$('detailThenNowBtn').onclick=openThenNow;
   $('detailIdentifyBtn').hidden=!d.mystery;$('detailIdentifyBtn').onclick=()=>openContribute(`Help identify: ${d.title}`,d.mysteryNotes);
   $('detailStoryBtn').hidden=!/^https?:/i.test(d.story||'');if(d.story)$('detailStoryBtn').href=d.story;
-  $('memoryDetailViewer').classList.add('open');$('memoryDetailViewer').setAttribute('aria-hidden','false');document.body.classList.add('memory-detail-open');
+  $('memoryDetailViewer').classList.add('open');$('memoryDetailViewer').setAttribute('aria-hidden','false');document.body.classList.add('memory-detail-open');updateOverlapNav();
 }
-function closeDetail(){ $('memoryDetailViewer').classList.remove('open');$('memoryDetailViewer').setAttribute('aria-hidden','true');document.body.classList.remove('memory-detail-open'); }
+function closeDetail(){ state.overlapFeatures=[];state.overlapIndex=0;updateOverlapNav();$('memoryDetailViewer').classList.remove('open');$('memoryDetailViewer').setAttribute('aria-hidden','true');document.body.classList.remove('memory-detail-open'); }
 async function hydrateHitGraphic(graphic){
   if(!graphic||!state.layer)return graphic;
   try{
@@ -278,10 +332,21 @@ async function initMap(){
     state.view=mapEl.view;
     state.view.on('click',async event=>{
       try{
-        let selected=null;
-        const hit=await state.view.hitTest(event,{include:[layer]});
-        const result=(hit.results||[]).find(r=>r?.graphic && (r.graphic.layer===layer || r.graphic.layer?.url===layer.url || r.graphic.sourceLayer?.url===layer.url));
-        if(result?.graphic) selected=await hydrateHitGraphic(result.graphic);
+        const nearby=await featuresNearClick(event);
+        if(nearby.length>1){
+          state.overlapFeatures=nearby;
+          state.overlapIndex=0;
+          await selectFeature(nearby[0],{preserveOverlap:true});
+          updateOverlapNav();
+          $('mapNote').textContent=`${nearby.length} memories overlap here — use Previous / Next in the viewer.`;
+          return;
+        }
+        let selected=nearby[0]||null;
+        if(!selected){
+          const hit=await state.view.hitTest(event,{include:[layer]});
+          const result=(hit.results||[]).find(r=>r?.graphic && (r.graphic.layer===layer || r.graphic.layer?.url===layer.url || r.graphic.sourceLayer?.url===layer.url));
+          if(result?.graphic) selected=await hydrateHitGraphic(result.graphic);
+        }
         if(!selected) selected=await nearestFeatureFromClick(event);
         if(selected){
           await selectFeature(selected);
