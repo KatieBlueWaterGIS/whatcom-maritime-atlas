@@ -141,12 +141,18 @@ async function applyFilters(){
 
 function metaRow(label,value){ return value ? `<dt>${label}</dt><dd>${value}</dd>` : ''; }
 function detailData(a){
+  const date = displayDate(val(a,'photo_date','date','date_taken','archive_date'));
+  const era = val(a,'era');
+  const media = val(a,'media_type','type') || 'Archive item';
+  const theme = val(a,'theme','industry');
   return {
-    image:imageUrl(a), media:val(a,'media_type','type')||'Archive item', era:[val(a,'era'),displayDate(val(a,'photo_date','date','date_taken'))].filter(Boolean).join(' · '),
+    image:imageUrl(a), media, date, era, theme,
+    kicker:[media,date,era].filter(Boolean).join(' · '),
     title:val(a,'title','object_name','source_caption','name')||'Untitled memory',
     description:val(a,'description','source_caption','caption','location_description','notes')||'',
-    location:val(a,'waterfront_area','neighborhood','location_description','place_name','location'), people:val(a,'people_names','people'), vessel:val(a,'vessels','vessel_name','vessel'), tags:val(a,'photo_tags','tags'),
-    collection:val(a,'archive_collection','collection'), credit:val(a,'source_credit','credit'), confidence:val(a,'location_confidence'),
+    location:val(a,'location_description','waterfront_area','neighborhood','place_name','location'),
+    people:val(a,'people_names','people'), vessel:val(a,'vessels','vessel_name','vessel'), tags:val(a,'photo_tags','tags'),
+    collection:val(a,'archive_collection','collection'), credit:val(a,'source_credit','source_donor','credit'), confidence:val(a,'location_confidence'),
     pair:val(a,'then_now_pair_URL','then_now_pair_url','now_photo_url','comparison_url'), mystery:truthy(val(a,'mystery_photo','mystery')), mysteryNotes:val(a,'mystery_notes','identification_notes','notes_needed'),
     story:val(a,'storymap_link','related_story','story_url')
   };
@@ -165,10 +171,21 @@ async function attachmentImageUrl(graphic){
 function fillDetailFields(prefix,d){
   setImg($(prefix+'Image'),d.image);
   $(prefix+'MediaBadge').textContent=d.media;
-  $(prefix+'Era').textContent=d.era;
+  $(prefix+'Era').textContent=d.kicker || d.media;
   $(prefix+'Title').textContent=d.title;
   $(prefix+'Description').textContent=d.description;
-  $(prefix+'Meta').innerHTML=[metaRow('Location',d.location),metaRow('People',d.people),metaRow('Vessel',d.vessel),metaRow('Tags',d.tags),metaRow('Collection',d.collection),metaRow('Credit',d.credit),metaRow('Confidence',d.confidence)].join('');
+  $(prefix+'Meta').innerHTML=[
+    metaRow('Date',d.date),
+    metaRow('Era',d.era),
+    metaRow('Theme',d.theme),
+    metaRow('Location',d.location),
+    metaRow('People',d.people),
+    metaRow('Vessel',d.vessel),
+    metaRow('Collection',d.collection),
+    metaRow('Credit',d.credit),
+    metaRow('Location confidence',d.confidence),
+    metaRow('Tags',d.tags)
+  ].join('');
 }
 async function selectFeature(graphic){
   if(!graphic)return; state.selected=graphic; const a=graphic.attributes||{},d=detailData(a);
