@@ -27,8 +27,25 @@ function displayDate(v){
   if(!Number.isNaN(d.getTime())) return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
   return String(v);
 }
-function imageUrl(a){ return val(a,'thumbnail_url','photo_url','image_url','image','photo','media_url','url') || imgFallback; }
-function setImg(el,url){ el.onerror=()=>{el.onerror=null;el.src=imgFallback}; el.src=url || imgFallback; }
+function imageUrl(a){
+  const direct = val(a,'thumbnail_url','photo_url','image_url','image','photo','media_url','web_image_url','public_url','r2_url','object_url','url');
+  if (direct && /^https?:\/\//i.test(String(direct))) return String(direct).trim();
+  // Scan the full record for image-looking URLs so the app remains resilient to schema refinements.
+  for (const [key,raw] of Object.entries(a||{})){
+    if (typeof raw !== 'string' || !raw.trim()) continue;
+    const txt=raw.trim();
+    const urls=txt.match(/https?:\/\/[^\s"'<>]+/ig) || [];
+    for (const u of urls){
+      if (/\.(jpe?g|png|webp|gif)(\?|#|$)/i.test(u) || /(photo|image|media|thumbnail|cloudflare|r2\.)/i.test(key+' '+u)) return u;
+    }
+  }
+  return '';
+}
+function setImg(el,url){
+  el.dataset.usingFallback='false';
+  el.onerror=()=>{ if(el.dataset.usingFallback==='true') return; el.dataset.usingFallback='true'; el.src=imgFallback; };
+  el.src=url || imgFallback;
+}
 
 async function findMappedLayer(mapEl){
   await mapEl.viewOnReady();
@@ -86,12 +103,12 @@ async function populateDistinct(selectId, field){
 }
 function clearChipFilter(selectId){
   const sel=$(selectId), box=$(`${selectId}Chips`); if(!sel||!box) return;
-  sel.hidden=false; box.hidden=true; box.innerHTML='';
+  sel.hidden=false; sel.style.display=''; box.hidden=true; box.style.display='none'; box.innerHTML='';
   sel.closest('.filter-control')?.classList.remove('chip-mode');
 }
 function makeChipFilter(selectId,values){
   const sel=$(selectId), box=$(`${selectId}Chips`); if(!sel||!box) return;
-  sel.hidden=true; box.hidden=false;
+  sel.hidden=true; sel.style.display='none'; box.hidden=false; box.style.display='flex';
   sel.closest('.filter-control')?.classList.add('chip-mode');
   const allText=(sel.options[0]?.textContent || 'All').trim();
   const items=[['',allText],...values.map(v=>[String(v),String(v)])];
@@ -136,14 +153,42 @@ function detailData(a){
     story:val(a,'storymap_link','related_story','story_url')
   };
 }
-function selectFeature(graphic){
+async function attachmentImageUrl(graphic){
+  if(!graphic || !state.layer?.capabilities?.data?.supportsAttachment) return '';
+  try{
+    const oid=graphic.getObjectId?.() ?? graphic.attributes?.[state.layer.objectIdField];
+    if(oid==null) return '';
+    const result=await state.layer.queryAttachments({objectIds:[oid]});
+    const items=result?.[oid] || result?.[String(oid)] || [];
+    const img=items.find(x=>/^image\//i.test(x.contentType||'')) || items[0];
+    return img?.url || '';
+  }catch(e){ console.warn('Attachment image lookup failed.',e); return ''; }
+}
+function fillDetailFields(prefix,d){
+  setImg($(prefix+'Image'),d.image);
+  $(prefix+'MediaBadge').textContent=d.media;
+  $(prefix+'Era').textContent=d.era;
+  $(prefix+'Title').textContent=d.title;
+  $(prefix+'Description').textContent=d.description;
+  $(prefix+'Meta').innerHTML=[metaRow('Location',d.location),metaRow('People',d.people),metaRow('Vessel',d.vessel),metaRow('Tags',d.tags),metaRow('Collection',d.collection),metaRow('Credit',d.credit),metaRow('Confidence',d.confidence)].join('');
+}
+async function selectFeature(graphic){
   if(!graphic)return; state.selected=graphic; const a=graphic.attributes||{},d=detailData(a);
-  $('selectedPlaceholder').hidden=true;$('selectedContent').hidden=false; setImg($('selectedImage'),d.image);$('selectedMediaBadge').textContent=d.media;$('selectedEra').textContent=d.era;$('selectedTitle').textContent=d.title;$('selectedDescription').textContent=d.description;
+  if(!d.image || d.image===imgFallback) d.image=await attachmentImageUrl(graphic) || imgFallback;
+  $('selectedPlaceholder').hidden=true;$('selectedContent').hidden=false;
+  setImg($('selectedImage'),d.image);$('selectedMediaBadge').textContent=d.media;$('selectedEra').textContent=d.era;$('selectedTitle').textContent=d.title;$('selectedDescription').textContent=d.description;
   $('selectedMeta').innerHTML=[metaRow('Location',d.location),metaRow('People',d.people),metaRow('Vessel',d.vessel),metaRow('Tags',d.tags),metaRow('Collection',d.collection),metaRow('Credit',d.credit),metaRow('Confidence',d.confidence)].join('');
   const hasPair=truthy(val(a,'then_now_available'))&&d.pair;$('thenNowBtn').hidden=!hasPair;$('thenNowBtn').dataset.pair=d.pair||'';
   $('identifyBtn').hidden=!d.mystery;$('identifyBtn').onclick=()=>openContribute(`Help identify: ${d.title}`,d.mysteryNotes);
   $('relatedStoryBtn').hidden=!/^https?:/i.test(d.story||'');if(d.story)$('relatedStoryBtn').href=d.story;
+  // Immersive viewer
+  fillDetailFields('detail',d);
+  $('detailThenNowBtn').hidden=!hasPair;$('detailThenNowBtn').onclick=openThenNow;
+  $('detailIdentifyBtn').hidden=!d.mystery;$('detailIdentifyBtn').onclick=()=>openContribute(`Help identify: ${d.title}`,d.mysteryNotes);
+  $('detailStoryBtn').hidden=!/^https?:/i.test(d.story||'');if(d.story)$('detailStoryBtn').href=d.story;
+  $('memoryDetailViewer').classList.add('open');$('memoryDetailViewer').setAttribute('aria-hidden','false');document.body.classList.add('memory-detail-open');
 }
+function closeDetail(){ $('memoryDetailViewer').classList.remove('open');$('memoryDetailViewer').setAttribute('aria-hidden','true');document.body.classList.remove('memory-detail-open'); }
 async function hydrateHitGraphic(graphic){
   if(!graphic||!state.layer)return graphic;
   try{
@@ -167,12 +212,12 @@ function openMystery(g){
   $('mysteryPrompt').textContent=d.mysteryNotes||d.description||'Some details about this photograph are still unknown. What can you tell us about the people, vessel, place, or date?';
   $('mysteryMeta').innerHTML=[metaRow('Approx. date',d.era),metaRow('Location',d.location),metaRow('Collection',d.collection),metaRow('What we know',d.tags)].join('');
   $('mysteryIdentify').onclick=()=>{closeModal('mysteryModal');openContribute(`Help identify: ${d.title}`,d.mysteryNotes)};
-  $('mysteryOnMap').onclick=()=>{closeModal('mysteryModal');selectFeature(g);if(g.geometry)state.mapEl.goTo({target:g.geometry,zoom:17},{duration:650});};
+  $('mysteryOnMap').onclick=async()=>{closeModal('mysteryModal');await selectFeature(g);if(g.geometry)state.mapEl.goTo({target:g.geometry,zoom:17},{duration:650});};
   $('mysteryModal').classList.add('open');$('mysteryModal').setAttribute('aria-hidden','false');
 }
 async function chooseThenNow(){
   const f=resolveField('then_now_available');if(!state.layer||!f)return;
-  try{const g=await randomFeature(`UPPER(${f}) IN ('YES','TRUE','Y','1')`);if(g){selectFeature(g);openThenNow();}}catch(e){console.warn(e)}
+  try{const g=await randomFeature(`UPPER(${f}) IN ('YES','TRUE','Y','1')`);if(g){await selectFeature(g);openThenNow();}}catch(e){console.warn(e)}
 }
 function openThenNow(){
   const a=state.selected?.attributes||{},d=detailData(a);const pair=d.pair||$('thenNowBtn').dataset.pair;if(!pair)return;
@@ -192,7 +237,7 @@ async function initMap(){
     mapEl.addEventListener('arcgisViewClick',async event=>{
       const hit=await mapEl.hitTest(event.detail,{include:[layer]});
       const result=(hit.results||[]).find(r=>r?.graphic && (r.graphic.layer===layer || r.graphic.layer?.url===layer.url || r.graphic.sourceLayer?.url===layer.url));
-      if(result?.graphic){const full=await hydrateHitGraphic(result.graphic);selectFeature(full);}
+      if(result?.graphic){const full=await hydrateHitGraphic(result.graphic);await selectFeature(full);}
     });
   }catch(e){console.error('Mapped Memories initialization failed:',e);$('mapNote').textContent='The live ArcGIS map could not be loaded. Open the browser console for the exact error.';$('resultCount').textContent='Map unavailable';}
 }
@@ -214,5 +259,8 @@ $('mysteryBtn').onclick=chooseMystery;$('nextMystery').onclick=chooseMystery;$('
 $('thenNowOnMap').onclick=()=>{closeModal('thenNowModal');const g=state.selected;if(g?.geometry)state.mapEl.goTo({target:g.geometry,zoom:17},{duration:650});};
 $('resetMap').onclick=()=>state.originalViewpoint&&state.mapEl?.goTo(state.originalViewpoint,{duration:600});$('thenNowSlider').addEventListener('input',e=>updateSlider(+e.target.value));updateSlider(50);
 document.querySelectorAll('[data-close-modal]').forEach(x=>x.onclick=()=>closeModal('thenNowModal'));document.querySelectorAll('[data-close-mystery]').forEach(x=>x.onclick=()=>closeModal('mysteryModal'));document.querySelectorAll('[data-close-contribute]').forEach(x=>x.onclick=()=>closeModal('contributeModal'));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('thenNowModal');closeModal('mysteryModal');closeModal('contributeModal');setFiltersOpen(false)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('thenNowModal');closeModal('mysteryModal');closeModal('contributeModal');closeDetail();setFiltersOpen(false)}});
+
+$('detailBack').onclick=closeDetail;
+document.querySelectorAll('[data-close-detail]').forEach(x=>x.onclick=closeDetail);
 customElements.whenDefined('arcgis-map').then(initMap);

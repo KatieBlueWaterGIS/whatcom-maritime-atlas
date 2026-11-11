@@ -97,6 +97,28 @@
   </section>
 </main>
 
+<div class="memory-detail-viewer" id="memoryDetailViewer" aria-hidden="true">
+  <div class="memory-detail-scrim" data-close-detail></div>
+  <section class="memory-detail-card" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <button class="memory-detail-back" id="detailBack" type="button">← Back to map</button>
+    <div class="memory-detail-media">
+      <img id="detailImage" alt="Selected historic photograph" />
+      <span class="selected-badge" id="detailMediaBadge"></span>
+    </div>
+    <div class="memory-detail-copy">
+      <p class="eyebrow" id="detailEra"></p>
+      <h2 id="detailTitle"></h2>
+      <p class="memory-detail-description" id="detailDescription"></p>
+      <dl class="selected-meta" id="detailMeta"></dl>
+      <div class="selected-buttons memory-detail-buttons">
+        <button id="detailThenNowBtn" class="memory-primary" type="button" hidden>View Then + Now</button>
+        <button id="detailIdentifyBtn" class="memory-gold" type="button" hidden>Help Identify</button>
+        <a id="detailStoryBtn" class="memory-link-button" href="#" target="_blank" rel="noopener" hidden>Explore Related Story ↗</a>
+      </div>
+    </div>
+  </section>
+</div>
+
 <div class="memory-modal" id="thenNowModal" aria-hidden="true">
   <div class="memory-modal-scrim" data-close-modal></div>
   <section class="memory-modal-card then-now-card" role="dialog" aria-modal="true" aria-labelledby="thenNowTitle">

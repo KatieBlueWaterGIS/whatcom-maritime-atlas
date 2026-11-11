@@ -172,6 +172,9 @@ function themeType(label) {
   if (l.includes("orca") || l.includes("environment")) return "orca";
   return "other";
 }
+function themeColor(label){
+  return {fishing:"#0b7480",lumber:"#8a7040",boatbuilding:"#b56f2a",orca:"#476d89",other:"#59717d"}[themeType(label)] || "#59717d";
+}
 
 function iconSvg(type, circle = false) {
   const bg = {fishing:"#0b6f78", lumber:"#7d713c", boatbuilding:"#b2752c", orca:"#355f7c", other:"#0b6f78"}[type] || "#0b6f78";
@@ -189,7 +192,8 @@ function iconSvg(type, circle = false) {
 
 function themeIconMarkup(label) { return iconSvg(themeType(label), false); }
 function themeMarkerUrl(label) {
-  const svg = iconSvg(themeType(label), true);
+  const color = themeColor(label);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="${color}" stroke="#fffaf1" stroke-width="4"/><circle cx="20" cy="20" r="5" fill="#fffaf1"/></svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
@@ -223,6 +227,8 @@ function buildThemeFilters() {
     button.className = "theme-chip";
     button.type = "button";
     button.dataset.theme = key;
+    button.dataset.themeType = themeType(label);
+    button.style.setProperty('--theme-color', themeColor(label));
     button.innerHTML = `<span class="theme-symbol">${themeIconMarkup(label)}</span><span><strong>${escapeHtml(label)}</strong><small>Explore this storyline</small></span>`;
     dom.themeFilter.appendChild(button);
   });
@@ -242,9 +248,12 @@ function renderStories() {
     const node = dom.storyCardTemplate.content.firstElementChild.cloneNode(true);
     const oid = graphic.attributes?.[objectIdField];
     node.dataset.oid = oid;
+    const cardTheme = getTheme(graphic);
+    node.dataset.themeType = themeType(cardTheme);
+    node.style.setProperty('--theme-color', themeColor(cardTheme));
     if (String(oid) === String(selectedObjectId)) node.classList.add("selected");
 
-    node.querySelector(".theme-pill").textContent = getTheme(graphic);
+    node.querySelector(".theme-pill").textContent = cardTheme;
     const cardIcon = node.querySelector(".card-theme-icon");
     if (cardIcon) cardIcon.innerHTML = themeIconMarkup(getTheme(graphic));
     node.querySelector(".story-number").textContent = String(index + 1).padStart(2, "0");
@@ -326,15 +335,16 @@ async function applyTheme(theme) {
   dom.panelTitle.textContent = theme === "all" ? "Explore the waterfront" : label;
   dom.panelSubtitle.textContent = theme === "all" ? "Select a point on the map or browse the stories below." : `Explore the places connected to ${label}.`;
 
-  if (storyLayerView) {
-    if (theme === "all" || !fieldMap.theme) storyLayerView.filter = null;
+  // Use the layer definition expression so the map itself deterministically hides other themes.
+  if (storyLayer && fieldMap.theme) {
+    if (theme === "all") storyLayer.definitionExpression = null;
     else {
       const values = [...new Set(allGraphics.filter(g => themeKey(getTheme(g)) === theme).map(g => g.attributes[fieldMap.theme]))];
       const field = storyLayer.fields.find(f => f.name === fieldMap.theme);
-      if (field && field.type === "string") {
+      if (field && field.type === "string" && values.length) {
         const escaped = values.map(v => `'${String(v).replace(/'/g, "''")}'`).join(",");
-        storyLayerView.filter = { where: `${fieldMap.theme} IN (${escaped})` };
-      }
+        storyLayer.definitionExpression = `${fieldMap.theme} IN (${escaped})`;
+      } else storyLayer.definitionExpression = null;
     }
   }
 
