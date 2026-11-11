@@ -5,7 +5,7 @@ const state = { layer:null, mapEl:null, fields:new Set(), fieldAliases:new Map()
 const $ = (id)=>document.getElementById(id);
 const esc = (v)=>String(v ?? '').replaceAll("'","''");
 const truthy = (v)=> ['yes','true','1','y'].includes(String(v ?? '').trim().toLowerCase());
-const imgFallback = 'assets/photos-banner.png';
+const imgFallback = 'photos-banner.png';
 
 function resolveField(...candidates){
   for(const c of candidates){
@@ -68,7 +68,7 @@ async function applyMemoryRenderer(){
       $arcgis.import('@arcgis/core/renderers/SimpleRenderer.js'),
       $arcgis.import('@arcgis/core/symbols/PictureMarkerSymbol.js')
     ]);
-    state.layer.renderer = new SimpleRenderer({symbol:new PictureMarkerSymbol({url:new URL('assets/icon-memories.png',location.href).href,width:34,height:34})});
+    state.layer.renderer = new SimpleRenderer({symbol:new PictureMarkerSymbol({url:new URL('icon-memories.png',location.href).href,width:34,height:34})});
   }catch(e){ console.warn('Custom Mapped Memories symbology unavailable; retaining Web Map renderer.',e); }
 }
 
