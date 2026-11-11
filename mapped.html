@@ -19,11 +19,11 @@
   </a>
   <button class="menu-button" aria-label="Open navigation" onclick="document.body.classList.toggle('nav-open')">☰</button>
   <nav class="site-nav">
+    <a href="index.html">Atlas Hub</a>
     <a href="tides.html">Tides of Change</a>
     <a class="active" href="mapped.html">Mapped Memories</a>
-    <a href="#">Waterfront Voices</a>
-    <a href="#">Local Seafood</a>
-    <a href="index.html">Atlas Hub</a>
+    <a href="index.html#voices">Waterfront Voices</a>
+    <a href="index.html#seafood">Local Seafood</a>
   </nav>
 </header>
 
@@ -147,5 +147,96 @@
 </div>
 
 <script type="module" src="mapped.js"></script>
+
+<style id="v21-overlap-style">
+/* V21: overlapping-memory navigator */
+.memory-stack-nav{display:none;align-items:center;gap:8px;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(7,59,92,.16);border-radius:10px;background:#f2eadc;color:#073b5c;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700}
+.memory-stack-nav.visible{display:flex}
+.memory-stack-nav button{width:34px;height:34px;border:1px solid rgba(7,59,92,.2);border-radius:50%;background:#fffaf1;color:#073b5c;font-size:18px;font-weight:800;cursor:pointer}
+.memory-stack-nav button:hover{background:#0b6f78;color:white;border-color:#0b6f78}
+.memory-stack-count{flex:1;text-align:center;white-space:nowrap}
+.memory-stack-label{font-weight:800;color:#0b6f78}
+@media(max-width:780px){.memory-stack-nav{position:sticky;top:0;z-index:5;margin:-4px 0 12px;background:#f7f0e5}.memory-stack-nav button{width:38px;height:38px}}
+</style>
+<script type="module" id="v21-overlap-patch">
+const MM_LAYER_SUFFIX='/Mapped_Memories_Full_Schema/FeatureServer/5';
+const q=(id)=>document.getElementById(id);
+const getVal=(a,...names)=>{for(const n of names){if(a?.[n]!==undefined&&a?.[n]!==null&&String(a[n]).trim()!=='')return a[n]}return ''};
+const formatDate=(v)=>{if(!v)return '';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})};
+const meta=(label,value)=>value?`<dt>${label}</dt><dd>${value}</dd>`:'';
+let overlapFeatures=[], overlapIndex=0, mmLayer=null, mmView=null;
+
+function ensureStackNav(){
+  let nav=q('memoryStackNav');
+  if(nav)return nav;
+  nav=document.createElement('div'); nav.id='memoryStackNav'; nav.className='memory-stack-nav';
+  nav.innerHTML='<button type="button" id="memoryStackPrev" aria-label="Previous memory">‹</button><div class="memory-stack-count"><span class="memory-stack-label">Overlapping memories</span><br><span id="memoryStackCount"></span></div><button type="button" id="memoryStackNext" aria-label="Next memory">›</button>';
+  const copy=document.querySelector('.memory-detail-copy');
+  copy?.insertBefore(nav,copy.firstChild);
+  q('memoryStackPrev').onclick=()=>showOverlap((overlapIndex-1+overlapFeatures.length)%overlapFeatures.length);
+  q('memoryStackNext').onclick=()=>showOverlap((overlapIndex+1)%overlapFeatures.length);
+  return nav;
+}
+
+function showOverlap(i){
+  if(!overlapFeatures.length)return;
+  overlapIndex=i; const g=overlapFeatures[i], a=g.attributes||{};
+  const image=getVal(a,'photo_url','thumbnail_url','image_url');
+  const title=getVal(a,'title','object_name','source_caption')||'Untitled memory';
+  const description=getVal(a,'description','source_caption','location_description')||'';
+  const date=formatDate(getVal(a,'photo_date','archive_date'));
+  const era=getVal(a,'era'); const media=getVal(a,'media_type')||'Archive item';
+  const theme=getVal(a,'theme','industry');
+  const location=getVal(a,'location_description','waterfront_area','neighborhood');
+  const people=getVal(a,'people_names'); const vessel=getVal(a,'vessels');
+  const collection=getVal(a,'archive_collection'); const credit=getVal(a,'source_credit','source_donor');
+  const confidence=getVal(a,'location_confidence'); const tags=getVal(a,'photo_tags');
+  if(image)q('detailImage').src=image;
+  q('detailMediaBadge').textContent=media;
+  q('detailEra').textContent=[media,date,era].filter(Boolean).join(' · ');
+  q('detailTitle').textContent=title; q('detailDescription').textContent=description;
+  q('detailMeta').innerHTML=[meta('Date',date),meta('Era',era),meta('Theme',theme),meta('Location',location),meta('People',people),meta('Vessel',vessel),meta('Collection',collection),meta('Credit',credit),meta('Location confidence',confidence),meta('Tags',tags)].join('');
+  const nav=ensureStackNav();
+  nav.classList.toggle('visible',overlapFeatures.length>1);
+  q('memoryStackCount').textContent=`${i+1} of ${overlapFeatures.length} at this location`;
+  const story=getVal(a,'storymap_link','story_url');
+  const storyBtn=q('detailStoryBtn');
+  if(story && /^https?:/i.test(story)){storyBtn.hidden=false;storyBtn.href=story}else storyBtn.hidden=true;
+  q('detailThenNowBtn').hidden=true; q('detailIdentifyBtn').hidden=true;
+  q('memoryDetailViewer').classList.add('open'); q('memoryDetailViewer').setAttribute('aria-hidden','false'); document.body.classList.add('memory-detail-open');
+}
+
+async function queryOverlap(event){
+  if(!mmLayer||!mmView||!event?.mapPoint)return [];
+  const qry=mmLayer.createQuery();
+  qry.where=mmLayer.definitionExpression||'1=1'; qry.geometry=event.mapPoint;
+  qry.distance=Math.max(22,(Number(mmView.resolution)||2)*16); qry.units='meters'; qry.spatialRelationship='intersects';
+  qry.outFields=['*']; qry.returnGeometry=true; qry.num=50;
+  const fs=await mmLayer.queryFeatures(qry); const click={x:event.x,y:event.y};
+  return (fs.features||[]).map(f=>{const p=mmView.toScreen(f.geometry);return {f,d:p?Math.hypot(p.x-click.x,p.y-click.y):9999}}).filter(x=>x.d<=28).sort((a,b)=>a.d-b.d).map(x=>x.f);
+}
+
+async function initOverlapPatch(){
+  const mapEl=q('memoryMap'); if(!mapEl)return;
+  await mapEl.viewOnReady(); mmView=mapEl.view;
+  for(let attempt=0;attempt<20&&!mmLayer;attempt++){
+    const layers=mapEl.map?.allLayers?.toArray?.()||[];
+    mmLayer=layers.find(l=>String(l.url||'').replace(/\\/$/,'').endsWith(MM_LAYER_SUFFIX));
+    if(!mmLayer)await new Promise(r=>setTimeout(r,250));
+  }
+  if(!mmLayer)return;
+  ensureStackNav();
+  mmView.on('click',async(event)=>{
+    try{
+      const matches=await queryOverlap(event); if(!matches.length)return;
+      overlapFeatures=matches; overlapIndex=0;
+      // Let the existing click handler finish, then replace it with the stack-aware detail view.
+      setTimeout(()=>showOverlap(0),60);
+    }catch(e){console.warn('Overlap navigator failed',e)}
+  });
+}
+customElements.whenDefined('arcgis-map').then(initOverlapPatch);
+</script>
+
 </body>
 </html>
