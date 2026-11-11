@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tides of Change — Whatcom Maritime Storytelling Atlas</title>
+<meta name="description" content="Explore place-based stories of fishing and canning, lumber, boatbuilding, and environment and orcas around Bellingham Bay." />
+<link rel="preconnect" href="https://js.arcgis.com" />
+<link rel="stylesheet" href="https://js.arcgis.com/4.33/esri/themes/light/main.css" />
+<link rel="stylesheet" href="styles.css" />
+<script src="https://js.arcgis.com/4.33/"></script>
+</head>
+<body class="tides-page tides-kiosk">
+<header class="site-header compact-header tides-header">
+  <a class="brand" href="index.html"><img class="brand-logo" src="assets/icon-hub.png" alt=""><span><b>WHATCOM MARITIME</b><strong>STORYTELLING ATLAS</strong></span></a>
+  <button class="menu-button" id="menuButton" aria-label="Open menu">☰</button>
+  <nav class="site-nav" id="siteNav"><a href="index.html">Atlas Hub</a><a class="active" href="tides.html">Tides of Change</a><a href="index.html#portals">Mapped Memories</a><a href="index.html#portals">Local Seafood</a></nav>
+</header>
+
+<main class="tides-kiosk-main">
+  <section class="kiosk-toolbar" aria-label="Tides of Change controls">
+    <div class="kiosk-title"><img src="assets/icon-tides.png" alt=""><div><strong>Tides of Change</strong><small>Tap a theme, map point, or story card</small></div></div>
+    <div class="theme-filter kiosk-filter" id="themeFilter">
+      <button class="theme-chip active" data-theme="all" type="button"><span class="theme-symbol all-symbol">✥</span><span><strong>All Stories</strong></span></button>
+    </div>
+  </section>
+
+  <section class="tides-kiosk-explorer" id="atlasExplorer">
+    <div class="map-shell kiosk-map-shell">
+      <div id="viewDiv" aria-label="Interactive Tides of Change story map"></div>
+      <div class="map-status" id="mapStatus">Connecting to ArcGIS Online…</div>
+      <button class="map-reset-button" id="resetViewButton" type="button">Reset map</button>
+    </div>
+    <aside class="story-panel kiosk-story-panel">
+      <div class="story-panel-head kiosk-story-head">
+        <div><p class="eyebrow">PLACE-BASED CHAPTERS</p><h2 id="panelTitle">Explore the waterfront</h2></div>
+        <strong id="resultCount">Loading…</strong>
+        <p id="panelSubtitle">Tap a story to open it here.</p>
+      </div>
+      <div class="story-list kiosk-story-list" id="storyList"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+    </aside>
+  </section>
+</main>
+
+<div class="story-viewer" id="storyViewer" aria-hidden="true">
+  <div class="story-viewer-scrim" id="storyViewerScrim"></div>
+  <section class="story-viewer-panel" role="dialog" aria-modal="true" aria-labelledby="storyViewerTitle">
+    <div class="story-viewer-bar">
+      <button class="story-back-button" id="storyBackButton" type="button">← Back to map</button>
+      <div class="story-viewer-heading"><span class="eyebrow">TIDES OF CHANGE</span><strong id="storyViewerTitle">Story</strong></div>
+      <a class="story-external-link" id="storyExternalLink" target="_blank" rel="noopener">Open full screen ↗</a>
+    </div>
+    <div class="story-frame-wrap">
+      <div class="story-frame-loading" id="storyFrameLoading">Loading StoryMap…</div>
+      <iframe id="storyFrame" title="Tides of Change StoryMap" loading="eager" allow="fullscreen; geolocation"></iframe>
+    </div>
+  </section>
+</div>
+
+<template id="storyCardTemplate"><article class="story-card"><button class="story-card-main" type="button"><div class="story-thumb"><span class="card-theme-icon">✥</span></div><div class="story-card-copy"><div class="story-meta"><span class="theme-pill"></span><span class="story-number"></span></div><h4></h4><p class="story-description"></p><span class="inline-open-label">Open story →</span></div></button></article></template>
+<script src="tides.js"></script>
+</body>
+</html>
