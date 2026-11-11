@@ -175,13 +175,8 @@ function fillDetailFields(prefix,d){
 async function selectFeature(graphic){
   if(!graphic)return; state.selected=graphic; const a=graphic.attributes||{},d=detailData(a);
   if(!d.image || d.image===imgFallback) d.image=await attachmentImageUrl(graphic) || imgFallback;
-  $('selectedPlaceholder').hidden=true;$('selectedContent').hidden=false;
-  setImg($('selectedImage'),d.image);$('selectedMediaBadge').textContent=d.media;$('selectedEra').textContent=d.era;$('selectedTitle').textContent=d.title;$('selectedDescription').textContent=d.description;
-  $('selectedMeta').innerHTML=[metaRow('Location',d.location),metaRow('People',d.people),metaRow('Vessel',d.vessel),metaRow('Tags',d.tags),metaRow('Collection',d.collection),metaRow('Credit',d.credit),metaRow('Confidence',d.confidence)].join('');
-  const hasPair=truthy(val(a,'then_now_available'))&&d.pair;$('thenNowBtn').hidden=!hasPair;$('thenNowBtn').dataset.pair=d.pair||'';
-  $('identifyBtn').hidden=!d.mystery;$('identifyBtn').onclick=()=>openContribute(`Help identify: ${d.title}`,d.mysteryNotes);
-  $('relatedStoryBtn').hidden=!/^https?:/i.test(d.story||'');if(d.story)$('relatedStoryBtn').href=d.story;
-  // Immersive viewer
+  const hasPair=truthy(val(a,'then_now_available'))&&d.pair;
+  // Universal immersive viewer for desktop + mobile
   fillDetailFields('detail',d);
   $('detailThenNowBtn').hidden=!hasPair;$('detailThenNowBtn').onclick=openThenNow;
   $('detailIdentifyBtn').hidden=!d.mystery;$('detailIdentifyBtn').onclick=()=>openContribute(`Help identify: ${d.title}`,d.mysteryNotes);
@@ -234,10 +229,16 @@ async function initMap(){
     const layer=await findMappedLayer(mapEl);state.layer=layer;registerFields(layer);await applyMemoryRenderer();
     await Promise.all([populateDistinct('eraFilter','era'),populateDistinct('mediaFilter','media_type'),populateDistinct('themeFilter','theme'),populateDistinct('areaFilter','waterfront_area'),populateDistinct('collectionFilter','archive_collection')]);
     await applyFilters();$('mapNote').textContent='Tap a point to explore its story.';
-    mapEl.addEventListener('arcgisViewClick',async event=>{
-      const hit=await mapEl.hitTest(event.detail,{include:[layer]});
-      const result=(hit.results||[]).find(r=>r?.graphic && (r.graphic.layer===layer || r.graphic.layer?.url===layer.url || r.graphic.sourceLayer?.url===layer.url));
-      if(result?.graphic){const full=await hydrateHitGraphic(result.graphic);await selectFeature(full);}
+    state.view=mapEl.view;
+    state.view.on('click',async event=>{
+      try{
+        const hit=await state.view.hitTest(event,{include:[layer]});
+        const result=(hit.results||[]).find(r=>r?.graphic && (r.graphic.layer===layer || r.graphic.layer?.url===layer.url || r.graphic.sourceLayer?.url===layer.url));
+        if(result?.graphic){
+          const full=await hydrateHitGraphic(result.graphic);
+          await selectFeature(full);
+        }
+      }catch(err){console.warn('Mapped Memories click selection failed.',err);}
     });
   }catch(e){console.error('Mapped Memories initialization failed:',e);$('mapNote').textContent='The live ArcGIS map could not be loaded. Open the browser console for the exact error.';$('resultCount').textContent='Map unavailable';}
 }
@@ -255,7 +256,7 @@ $('filtersToggle').onclick=()=>setFiltersOpen(true);
 $('filtersClose').onclick=()=>setFiltersOpen(false);
 $('filtersDone').onclick=()=>setFiltersOpen(false);
 $('filtersBackdrop').onclick=()=>setFiltersOpen(false);
-$('mysteryBtn').onclick=chooseMystery;$('nextMystery').onclick=chooseMystery;$('thenNowExploreBtn').onclick=chooseThenNow;$('nextThenNow').onclick=chooseThenNow;$('contributeBtn').onclick=()=>openContribute();$('thenNowBtn').onclick=openThenNow;
+$('mysteryBtn').onclick=chooseMystery;$('nextMystery').onclick=chooseMystery;$('thenNowExploreBtn').onclick=chooseThenNow;$('nextThenNow').onclick=chooseThenNow;$('contributeBtn').onclick=()=>openContribute();
 $('thenNowOnMap').onclick=()=>{closeModal('thenNowModal');const g=state.selected;if(g?.geometry)state.mapEl.goTo({target:g.geometry,zoom:17},{duration:650});};
 $('resetMap').onclick=()=>state.originalViewpoint&&state.mapEl?.goTo(state.originalViewpoint,{duration:600});$('thenNowSlider').addEventListener('input',e=>updateSlider(+e.target.value));updateSlider(50);
 document.querySelectorAll('[data-close-modal]').forEach(x=>x.onclick=()=>closeModal('thenNowModal'));document.querySelectorAll('[data-close-mystery]').forEach(x=>x.onclick=()=>closeModal('mysteryModal'));document.querySelectorAll('[data-close-contribute]').forEach(x=>x.onclick=()=>closeModal('contributeModal'));
