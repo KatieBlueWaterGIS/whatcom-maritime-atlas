@@ -10,21 +10,81 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 <script type="module" src="https://js.arcgis.com/5.2/"></script>
+
+<style id="atlas-global-header-v23">
+/* V23: one identical global header on every Atlas page */
+.atlas-global-header{
+  height:58px!important;
+  min-height:58px!important;
+  padding:0 48px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  box-sizing:border-box!important;
+}
+.atlas-global-header .brand{display:flex!important;align-items:center!important;gap:10px!important}
+.atlas-global-header .brand-logo{width:44px!important;height:44px!important;flex:0 0 44px!important}
+.atlas-global-header .brand span{display:flex!important;flex-direction:column!important;line-height:.9!important}
+.atlas-global-header .brand b{font-size:15px!important;line-height:1!important}
+.atlas-global-header .brand strong{font-size:18px!important;line-height:1!important}
+.atlas-global-header .site-nav{display:flex!important;align-items:stretch!important;gap:28px!important;height:100%!important}
+.atlas-global-header .site-nav a{
+  display:flex!important;align-items:center!important;
+  height:100%!important;margin:0!important;padding:0 0!important;
+  font-size:17px!important;white-space:nowrap!important;
+  border-bottom:3px solid transparent!important;
+}
+.atlas-global-header .site-nav a.active{border-bottom-color:#d2a33b!important}
+@media(max-width:900px){
+  .atlas-global-header{padding:0 18px!important}
+  .atlas-global-header .site-nav{gap:16px!important}
+  .atlas-global-header .site-nav a{font-size:15px!important}
+}
+@media(max-width:780px){
+  .atlas-global-header{height:58px!important;min-height:58px!important;padding:0 12px!important}
+  .atlas-global-header .brand-logo{width:40px!important;height:40px!important;flex-basis:40px!important}
+  .atlas-global-header .brand b{font-size:12px!important}
+  .atlas-global-header .brand strong{font-size:15px!important}
+  .atlas-global-header .site-nav{display:none!important}
+  body.nav-open .atlas-global-header .site-nav{
+    display:flex!important;position:absolute!important;top:58px!important;left:0!important;right:0!important;
+    height:auto!important;flex-direction:column!important;gap:0!important;background:#073b5c!important;
+    padding:8px 16px 14px!important;z-index:5000!important;
+  }
+  body.nav-open .atlas-global-header .site-nav a{height:42px!important;border-bottom:1px solid rgba(255,255,255,.12)!important}
+}
+</style>
+
+<style id="v23-overlap-style">
+.memory-stack-nav{
+  display:none;align-items:center;gap:10px;margin:0 0 14px;padding:10px 12px;
+  border:1px solid rgba(7,59,92,.16);border-radius:10px;background:#f2eadc;
+  color:#073b5c;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;
+}
+.memory-stack-nav.visible{display:flex!important}
+.memory-stack-nav button{
+  width:38px;height:38px;flex:0 0 38px;border:1px solid rgba(7,59,92,.22);
+  border-radius:50%;background:#fffaf1;color:#073b5c;font-size:21px;font-weight:800;cursor:pointer;
+}
+.memory-stack-nav button:hover{background:#0b6f78;color:#fff;border-color:#0b6f78}
+.memory-stack-count{flex:1;text-align:center;line-height:1.25}
+.memory-stack-count strong{display:block;color:#0b6f78;font-size:12px}
+.memory-stack-count span{display:block;font-size:11px;color:#51656d;margin-top:2px}
+@media(max-width:780px){
+  .memory-stack-nav{position:sticky;top:0;z-index:7;margin:-2px 0 12px;background:#f7f0e5}
+  .memory-stack-nav button{width:42px;height:42px;flex-basis:42px}
+}
+</style>
+
 </head>
 <body class="memories-kiosk">
-<header class="site-header memories-header">
+<header class="site-header atlas-global-header">
   <a class="brand" href="index.html" aria-label="Whatcom Maritime Storytelling Atlas home">
     <img class="brand-logo" src="icon-hub.png" alt="" />
     <span><b>WHATCOM MARITIME</b><strong>STORYTELLING ATLAS</strong></span>
   </a>
   <button class="menu-button" aria-label="Open navigation" onclick="document.body.classList.toggle('nav-open')">☰</button>
-  <nav class="site-nav">
-    <a href="index.html">Atlas Hub</a>
-    <a href="tides.html">Tides of Change</a>
-    <a class="active" href="mapped.html">Mapped Memories</a>
-    <a href="index.html#voices">Waterfront Voices</a>
-    <a href="index.html#seafood">Local Seafood</a>
-  </nav>
+  <nav class="site-nav"><a href="index.html">Atlas Hub</a><a href="tides.html">Tides of Change</a><a class="active" href="mapped.html">Mapped Memories</a><a href="index.html#voices">Waterfront Voices</a><a href="index.html#seafood">Local Seafood</a></nav>
 </header>
 
 <main class="memories-main">
@@ -148,95 +208,159 @@
 
 <script type="module" src="mapped.js"></script>
 
-<style id="v21-overlap-style">
-/* V21: overlapping-memory navigator */
-.memory-stack-nav{display:none;align-items:center;gap:8px;margin:0 0 14px;padding:10px 12px;border:1px solid rgba(7,59,92,.16);border-radius:10px;background:#f2eadc;color:#073b5c;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700}
-.memory-stack-nav.visible{display:flex}
-.memory-stack-nav button{width:34px;height:34px;border:1px solid rgba(7,59,92,.2);border-radius:50%;background:#fffaf1;color:#073b5c;font-size:18px;font-weight:800;cursor:pointer}
-.memory-stack-nav button:hover{background:#0b6f78;color:white;border-color:#0b6f78}
-.memory-stack-count{flex:1;text-align:center;white-space:nowrap}
-.memory-stack-label{font-weight:800;color:#0b6f78}
-@media(max-width:780px){.memory-stack-nav{position:sticky;top:0;z-index:5;margin:-4px 0 12px;background:#f7f0e5}.memory-stack-nav button{width:38px;height:38px}}
-</style>
-<script type="module" id="v21-overlap-patch">
-const MM_LAYER_SUFFIX='/Mapped_Memories_Full_Schema/FeatureServer/5';
-const q=(id)=>document.getElementById(id);
-const getVal=(a,...names)=>{for(const n of names){if(a?.[n]!==undefined&&a?.[n]!==null&&String(a[n]).trim()!=='')return a[n]}return ''};
-const formatDate=(v)=>{if(!v)return '';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})};
-const meta=(label,value)=>value?`<dt>${label}</dt><dd>${value}</dd>`:'';
-let overlapFeatures=[], overlapIndex=0, mmLayer=null, mmView=null;
+<script type="module" id="v23-overlap-patch">
+const mmq=(id)=>document.getElementById(id);
+let mmDirectLayer=null, mmDirectView=null, mmMatches=[], mmIndex=0, mmFields=new Map();
 
-function ensureStackNav(){
-  let nav=q('memoryStackNav');
+function mmAttr(a,...names){
+  for(const n of names){
+    const actual=mmFields.get(String(n).toLowerCase()) || n;
+    if(a && a[actual]!==undefined && a[actual]!==null && String(a[actual]).trim()!=='') return a[actual];
+  }
+  return '';
+}
+function mmDate(v){
+  if(!v)return '';
+  const d=new Date(v);
+  return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+}
+function mmMeta(label,value){return value?`<dt>${label}</dt><dd>${value}</dd>`:''}
+function mmEsc(v){return String(v??'').replaceAll("'","''")}
+
+function mmCurrentWhere(){
+  const parts=[];
+  const map=[
+    ['eraFilter','era'],
+    ['mediaFilter','media_type'],
+    ['themeFilter','theme'],
+    ['areaFilter','waterfront_area'],
+    ['collectionFilter','archive_collection']
+  ];
+  for(const [id,field] of map){
+    const el=mmq(id), val=el?.value;
+    const actual=mmFields.get(field.toLowerCase());
+    if(val && actual) parts.push(`${actual}='${mmEsc(val)}'`);
+  }
+  const mystery=mmFields.get('mystery_photo');
+  if(mmq('mysteryOnly')?.checked && mystery) parts.push(`UPPER(${mystery}) IN ('YES','TRUE','Y','1')`);
+  const thenNow=mmFields.get('then_now_available');
+  if(mmq('thenNowOnly')?.checked && thenNow) parts.push(`UPPER(${thenNow}) IN ('YES','TRUE','Y','1')`);
+  const s=mmq('memorySearch')?.value?.trim();
+  if(s){
+    const searchFields=['title','description','photo_tags','people_names','vessels','businesses_orgs','location_description']
+      .map(f=>mmFields.get(f)).filter(Boolean);
+    if(searchFields.length) parts.push('('+searchFields.map(f=>`UPPER(${f}) LIKE '%${mmEsc(s.toUpperCase())}%'`).join(' OR ')+')');
+  }
+  return parts.length?parts.join(' AND '):'1=1';
+}
+
+function mmEnsureNav(){
+  let nav=mmq('memoryStackNav');
   if(nav)return nav;
-  nav=document.createElement('div'); nav.id='memoryStackNav'; nav.className='memory-stack-nav';
-  nav.innerHTML='<button type="button" id="memoryStackPrev" aria-label="Previous memory">‹</button><div class="memory-stack-count"><span class="memory-stack-label">Overlapping memories</span><br><span id="memoryStackCount"></span></div><button type="button" id="memoryStackNext" aria-label="Next memory">›</button>';
+  nav=document.createElement('div');
+  nav.id='memoryStackNav'; nav.className='memory-stack-nav';
+  nav.innerHTML='<button type="button" id="memoryStackPrev" aria-label="Previous memory">‹</button><div class="memory-stack-count"><strong>Multiple memories here</strong><span id="memoryStackCount"></span></div><button type="button" id="memoryStackNext" aria-label="Next memory">›</button>';
   const copy=document.querySelector('.memory-detail-copy');
   copy?.insertBefore(nav,copy.firstChild);
-  q('memoryStackPrev').onclick=()=>showOverlap((overlapIndex-1+overlapFeatures.length)%overlapFeatures.length);
-  q('memoryStackNext').onclick=()=>showOverlap((overlapIndex+1)%overlapFeatures.length);
+  mmq('memoryStackPrev').onclick=()=>mmShow((mmIndex-1+mmMatches.length)%mmMatches.length);
+  mmq('memoryStackNext').onclick=()=>mmShow((mmIndex+1)%mmMatches.length);
   return nav;
 }
 
-function showOverlap(i){
-  if(!overlapFeatures.length)return;
-  overlapIndex=i; const g=overlapFeatures[i], a=g.attributes||{};
-  const image=getVal(a,'photo_url','thumbnail_url','image_url');
-  const title=getVal(a,'title','object_name','source_caption')||'Untitled memory';
-  const description=getVal(a,'description','source_caption','location_description')||'';
-  const date=formatDate(getVal(a,'photo_date','archive_date'));
-  const era=getVal(a,'era'); const media=getVal(a,'media_type')||'Archive item';
-  const theme=getVal(a,'theme','industry');
-  const location=getVal(a,'location_description','waterfront_area','neighborhood');
-  const people=getVal(a,'people_names'); const vessel=getVal(a,'vessels');
-  const collection=getVal(a,'archive_collection'); const credit=getVal(a,'source_credit','source_donor');
-  const confidence=getVal(a,'location_confidence'); const tags=getVal(a,'photo_tags');
-  if(image)q('detailImage').src=image;
-  q('detailMediaBadge').textContent=media;
-  q('detailEra').textContent=[media,date,era].filter(Boolean).join(' · ');
-  q('detailTitle').textContent=title; q('detailDescription').textContent=description;
-  q('detailMeta').innerHTML=[meta('Date',date),meta('Era',era),meta('Theme',theme),meta('Location',location),meta('People',people),meta('Vessel',vessel),meta('Collection',collection),meta('Credit',credit),meta('Location confidence',confidence),meta('Tags',tags)].join('');
-  const nav=ensureStackNav();
-  nav.classList.toggle('visible',overlapFeatures.length>1);
-  q('memoryStackCount').textContent=`${i+1} of ${overlapFeatures.length} at this location`;
-  const story=getVal(a,'storymap_link','story_url');
-  const storyBtn=q('detailStoryBtn');
-  if(story && /^https?:/i.test(story)){storyBtn.hidden=false;storyBtn.href=story}else storyBtn.hidden=true;
-  q('detailThenNowBtn').hidden=true; q('detailIdentifyBtn').hidden=true;
-  q('memoryDetailViewer').classList.add('open'); q('memoryDetailViewer').setAttribute('aria-hidden','false'); document.body.classList.add('memory-detail-open');
+function mmShow(i){
+  if(!mmMatches.length)return;
+  mmIndex=i;
+  const a=mmMatches[i].attributes||{};
+  const image=mmAttr(a,'photo_url','thumbnail_url','image_url');
+  const title=mmAttr(a,'title','object_name','source_caption')||'Untitled memory';
+  const description=mmAttr(a,'description','source_caption','location_description')||'';
+  const date=mmDate(mmAttr(a,'photo_date','date','archive_date'));
+  const era=mmAttr(a,'era');
+  const media=mmAttr(a,'media_type')||'Archive item';
+  const theme=mmAttr(a,'theme','industry');
+  const location=mmAttr(a,'location_description','waterfront_area','neighborhood');
+  const people=mmAttr(a,'people_names','people');
+  const vessel=mmAttr(a,'vessels','vessel_name','vessel');
+  const collection=mmAttr(a,'archive_collection','collection');
+  const credit=mmAttr(a,'source_credit','source_donor','credit');
+  const confidence=mmAttr(a,'location_confidence');
+  const tags=mmAttr(a,'photo_tags','tags');
+
+  if(image) mmq('detailImage').src=image;
+  mmq('detailMediaBadge').textContent=media;
+  mmq('detailEra').textContent=[media,date,era].filter(Boolean).join(' · ');
+  mmq('detailTitle').textContent=title;
+  mmq('detailDescription').textContent=description;
+  mmq('detailMeta').innerHTML=[
+    mmMeta('Date',date),mmMeta('Era',era),mmMeta('Theme',theme),mmMeta('Location',location),
+    mmMeta('People',people),mmMeta('Vessel',vessel),mmMeta('Collection',collection),
+    mmMeta('Credit',credit),mmMeta('Location confidence',confidence),mmMeta('Tags',tags)
+  ].join('');
+
+  const nav=mmEnsureNav();
+  nav.classList.add('visible');
+  mmq('memoryStackCount').textContent=`${i+1} of ${mmMatches.length}`;
+
+  // Avoid actions being tied to the original single selected record.
+  mmq('detailThenNowBtn').hidden=true;
+  mmq('detailIdentifyBtn').hidden=true;
+  mmq('detailStoryBtn').hidden=true;
+
+  mmq('memoryDetailViewer').classList.add('open');
+  mmq('memoryDetailViewer').setAttribute('aria-hidden','false');
+  document.body.classList.add('memory-detail-open');
 }
 
-async function queryOverlap(event){
-  if(!mmLayer||!mmView||!event?.mapPoint)return [];
-  const qry=mmLayer.createQuery();
-  qry.where=mmLayer.definitionExpression||'1=1'; qry.geometry=event.mapPoint;
-  qry.distance=Math.max(22,(Number(mmView.resolution)||2)*16); qry.units='meters'; qry.spatialRelationship='intersects';
-  qry.outFields=['*']; qry.returnGeometry=true; qry.num=50;
-  const fs=await mmLayer.queryFeatures(qry); const click={x:event.x,y:event.y};
-  return (fs.features||[]).map(f=>{const p=mmView.toScreen(f.geometry);return {f,d:p?Math.hypot(p.x-click.x,p.y-click.y):9999}}).filter(x=>x.d<=28).sort((a,b)=>a.d-b.d).map(x=>x.f);
+async function mmNearby(event){
+  if(!mmDirectLayer||!mmDirectView||!event?.mapPoint)return [];
+  const q=mmDirectLayer.createQuery();
+  q.where=mmCurrentWhere();
+  q.geometry=event.mapPoint;
+  q.distance=Math.max(30,(Number(mmDirectView.resolution)||2)*22);
+  q.units='meters';
+  q.spatialRelationship='intersects';
+  q.outFields=['*']; q.returnGeometry=true; q.num=100;
+  const fs=await mmDirectLayer.queryFeatures(q);
+  const click={x:event.x,y:event.y};
+  return (fs.features||[])
+    .map(f=>{const p=mmDirectView.toScreen(f.geometry);return {f,d:p?Math.hypot(p.x-click.x,p.y-click.y):9999}})
+    .filter(x=>x.d<=34)
+    .sort((a,b)=>a.d-b.d)
+    .map(x=>x.f);
 }
 
-async function initOverlapPatch(){
-  const mapEl=q('memoryMap'); if(!mapEl)return;
-  await mapEl.viewOnReady(); mmView=mapEl.view;
-  for(let attempt=0;attempt<20&&!mmLayer;attempt++){
-    const layers=mapEl.map?.allLayers?.toArray?.()||[];
-    mmLayer=layers.find(l=>String(l.url||'').replace(/\\/$/,'').endsWith(MM_LAYER_SUFFIX));
-    if(!mmLayer)await new Promise(r=>setTimeout(r,250));
-  }
-  if(!mmLayer)return;
-  ensureStackNav();
-  mmView.on('click',async(event)=>{
+async function mmInitOverlap(){
+  const mapEl=mmq('memoryMap'); if(!mapEl)return;
+  await mapEl.viewOnReady();
+  mmDirectView=mapEl.view;
+
+  const FeatureLayer=await $arcgis.import('@arcgis/core/layers/FeatureLayer.js');
+  mmDirectLayer=new FeatureLayer({
+    url:'https://services2.arcgis.com/VmLllxPKgIzlr2id/arcgis/rest/services/Mapped_Memories_Full_Schema/FeatureServer/5',
+    outFields:['*'], popupEnabled:false
+  });
+  await mmDirectLayer.load();
+  mmFields=new Map((mmDirectLayer.fields||[]).map(f=>[String(f.name).toLowerCase(),f.name]));
+  mmEnsureNav();
+
+  mmDirectView.on('click',async(event)=>{
     try{
-      const matches=await queryOverlap(event); if(!matches.length)return;
-      overlapFeatures=matches; overlapIndex=0;
-      // Let the existing click handler finish, then replace it with the stack-aware detail view.
-      setTimeout(()=>showOverlap(0),60);
-    }catch(e){console.warn('Overlap navigator failed',e)}
+      const matches=await mmNearby(event);
+      if(matches.length<=1){
+        mmMatches=[];
+        const nav=mmq('memoryStackNav'); if(nav) nav.classList.remove('visible');
+        return; // existing mapped.js handles normal single-point selection
+      }
+      mmMatches=matches; mmIndex=0;
+      // existing handler may open the top feature first; replace it after that finishes.
+      setTimeout(()=>mmShow(0),120);
+      mmq('mapNote').textContent=`${matches.length} memories overlap here — use Previous / Next in the viewer.`;
+    }catch(err){console.warn('Overlap browsing failed',err)}
   });
 }
-customElements.whenDefined('arcgis-map').then(initOverlapPatch);
+customElements.whenDefined('arcgis-map').then(mmInitOverlap);
 </script>
+
 
 </body>
 </html>

@@ -7,65 +7,74 @@
 <meta name="description" content="A mobile-first public hub connecting place-based maritime stories around Bellingham Bay." />
 <link rel="stylesheet" href="styles.css" />
 
-<style>
-/* V22 — desktop hub fits hero + partners/footer in one viewport */
-@media (min-width: 781px){
-  html, body.hub-page{height:100%; overflow:hidden;}
-  body.hub-page{display:flex; flex-direction:column; min-height:100vh;}
-  body.hub-page .site-header{flex:0 0 62px; min-height:62px;}
-  body.hub-page .hub-main{flex:1 1 auto; min-height:0; overflow:hidden;}
-  body.hub-page .atlas-hub-hero{
-    height:100%; min-height:0 !important;
-    padding-top:12px !important;
-    padding-bottom:8px !important;
-    overflow:hidden;
-  }
-  body.hub-page .hub-title-block{
-    top:4.5% !important;
-    transform:scale(.88);
-    transform-origin:top left;
-  }
-  body.hub-page .hub-title-block h1{margin-bottom:4px !important;}
-  body.hub-page .hub-title-block .hub-tagline{margin-top:3px !important; margin-bottom:5px !important;}
-  body.hub-page .hub-title-block .mockup-rule{margin-top:4px !important; margin-bottom:4px !important;}
-  body.hub-page .hub-title-block .hub-summary{margin-top:7px !important; line-height:1.35 !important;}
-  body.hub-page .hub-network{
-    top:48% !important;
-    transform:translateY(-50%) scale(.86);
-    transform-origin:center center;
-  }
-  body.hub-page .hub-footer{
-    flex:0 0 72px;
-    min-height:72px;
-    padding:9px 28px !important;
-    font-size:12px !important;
-    line-height:1.28 !important;
-    box-sizing:border-box;
-  }
-  body.hub-page .hub-footer strong{font-size:12px !important;}
+<style id="atlas-global-header-v23">
+/* V23: one identical global header on every Atlas page */
+.atlas-global-header{
+  height:58px!important;
+  min-height:58px!important;
+  padding:0 48px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  box-sizing:border-box!important;
 }
-@media (min-width: 781px) and (max-height: 800px){
-  body.hub-page .site-header{flex-basis:56px; min-height:56px;}
-  body.hub-page .hub-title-block{transform:scale(.80); top:3% !important;}
-  body.hub-page .hub-network{transform:translateY(-49%) scale(.78); top:50% !important;}
-  body.hub-page .hub-footer{flex-basis:64px; min-height:64px; padding:7px 24px !important;}
+.atlas-global-header .brand{display:flex!important;align-items:center!important;gap:10px!important}
+.atlas-global-header .brand-logo{width:44px!important;height:44px!important;flex:0 0 44px!important}
+.atlas-global-header .brand span{display:flex!important;flex-direction:column!important;line-height:.9!important}
+.atlas-global-header .brand b{font-size:15px!important;line-height:1!important}
+.atlas-global-header .brand strong{font-size:18px!important;line-height:1!important}
+.atlas-global-header .site-nav{display:flex!important;align-items:stretch!important;gap:28px!important;height:100%!important}
+.atlas-global-header .site-nav a{
+  display:flex!important;align-items:center!important;
+  height:100%!important;margin:0!important;padding:0 0!important;
+  font-size:17px!important;white-space:nowrap!important;
+  border-bottom:3px solid transparent!important;
+}
+.atlas-global-header .site-nav a.active{border-bottom-color:#d2a33b!important}
+@media(max-width:900px){
+  .atlas-global-header{padding:0 18px!important}
+  .atlas-global-header .site-nav{gap:16px!important}
+  .atlas-global-header .site-nav a{font-size:15px!important}
+}
+@media(max-width:780px){
+  .atlas-global-header{height:58px!important;min-height:58px!important;padding:0 12px!important}
+  .atlas-global-header .brand-logo{width:40px!important;height:40px!important;flex-basis:40px!important}
+  .atlas-global-header .brand b{font-size:12px!important}
+  .atlas-global-header .brand strong{font-size:15px!important}
+  .atlas-global-header .site-nav{display:none!important}
+  body.nav-open .atlas-global-header .site-nav{
+    display:flex!important;position:absolute!important;top:58px!important;left:0!important;right:0!important;
+    height:auto!important;flex-direction:column!important;gap:0!important;background:#073b5c!important;
+    padding:8px 16px 14px!important;z-index:5000!important;
+  }
+  body.nav-open .atlas-global-header .site-nav a{height:42px!important;border-bottom:1px solid rgba(255,255,255,.12)!important}
 }
 </style>
+
+<style id="hub-fit-v23">
+/* Restore the original hub composition; only reserve room for the partner footer. */
+@media(min-width:781px){
+  html,body.hub-page{height:100%;overflow:hidden}
+  body.hub-page{min-height:100vh}
+  body.hub-page .hub-main{height:calc(100vh - 58px - 68px);min-height:0;overflow:hidden}
+  body.hub-page .atlas-hub-hero{height:100%;min-height:0!important}
+  body.hub-page .hub-footer{
+    position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+    height:68px!important;min-height:68px!important;z-index:40!important;
+    padding:10px 24px!important;box-sizing:border-box!important;
+  }
+}
+</style>
+
 </head>
 <body class="hub-page branded-hub">
-<header class="site-header hub-header">
+<header class="site-header atlas-global-header">
   <a class="brand" href="index.html" aria-label="Whatcom Maritime Storytelling Atlas home">
     <img class="brand-logo" src="icon-hub.png" alt="" />
     <span><b>WHATCOM MARITIME</b><strong>STORYTELLING ATLAS</strong></span>
   </a>
   <button class="menu-button" aria-label="Open navigation" onclick="document.body.classList.toggle('nav-open')">☰</button>
-  <nav class="site-nav">
-    <a class="active" href="index.html">Atlas Hub</a>
-    <a href="tides.html">Tides of Change</a>
-    <a href="mapped.html">Mapped Memories</a>
-    <a href="index.html#voices">Waterfront Voices</a>
-    <a href="index.html#seafood">Local Seafood</a>
-  </nav>
+  <nav class="site-nav"><a class="active" href="index.html">Atlas Hub</a><a href="tides.html">Tides of Change</a><a href="mapped.html">Mapped Memories</a><a href="index.html#voices">Waterfront Voices</a><a href="index.html#seafood">Local Seafood</a></nav>
 </header>
 
 <main class="hub-main">
