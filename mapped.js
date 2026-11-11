@@ -1,5 +1,6 @@
 const WEBMAP_ID = '077054926df6434f8662cf8850e3c100';
 const SERVICE_ROOT = 'https://services2.arcgis.com/VmLllxPKgIzlr2id/arcgis/rest/services/Mapped_Memories_Full_Schema/FeatureServer';
+const MAPPED_LAYER_URL = `${SERVICE_ROOT}/5`; // verified live layer
 
 const state = { layer:null, mapEl:null, fields:new Set(), fieldAliases:new Map(), selected:null, mysterySelected:null, originalViewpoint:null };
 const $ = (id)=>document.getElementById(id);
@@ -28,7 +29,7 @@ function displayDate(v){
   return String(v);
 }
 function imageUrl(a){
-  const direct = val(a,'thumbnail_url','photo_url','image_url','image','photo','media_url','web_image_url','public_url','r2_url','object_url','url');
+  const direct = val(a,'photo_url','thumbnail_url','image_url','image','photo','media_url','web_image_url','public_url','r2_url','object_url','url');
   if (direct && /^https?:\/\//i.test(String(direct))) return String(direct).trim();
   // Scan the full record for image-looking URLs so the app remains resilient to schema refinements.
   for (const [key,raw] of Object.entries(a||{})){
@@ -52,24 +53,21 @@ async function findMappedLayer(mapEl){
   const map = mapEl.map;
   if (map?.loadAll) await map.loadAll();
   const layers = map?.allLayers?.toArray?.() || [];
+  // Prefer the exact verified Mapped Memories layer if it is already in the Web Map.
   for (const layer of layers){
     try{
       await layer.load();
+      if ((layer.url || '').replace(/\/$/,'') === MAPPED_LAYER_URL) return layer;
       const names = new Set((layer.fields || []).map(f=>f.name.toLowerCase()));
-      if(names.has('photo_id') || names.has('mystery_photo') || names.has('then_now_available')) return layer;
+      if(names.has('photo_url') && names.has('photo_id') && names.has('description')) return layer;
     }catch(e){ console.warn('Layer inspection skipped:', layer?.title, e); }
   }
+  // Otherwise add the known public layer directly.
   const FeatureLayer = await $arcgis.import('@arcgis/core/layers/FeatureLayer.js');
-  const root = await fetch(`${SERVICE_ROOT}?f=json`).then(r=>{if(!r.ok) throw new Error(`Feature service request failed (${r.status})`);return r.json();});
-  for (const info of (root.layers || [])){
-    const meta = await fetch(`${SERVICE_ROOT}/${info.id}?f=json`).then(r=>r.json());
-    const names = new Set((meta.fields || []).map(f=>f.name.toLowerCase()));
-    if(names.has('photo_id') || names.has('mystery_photo') || names.has('title')){
-      const layer = new FeatureLayer({url:`${SERVICE_ROOT}/${info.id}`, outFields:['*']});
-      map.add(layer); await layer.load(); return layer;
-    }
-  }
-  throw new Error('Could not identify a Mapped Memories feature layer in the Web Map or feature service.');
+  const layer = new FeatureLayer({url:MAPPED_LAYER_URL, outFields:['*'], popupEnabled:false});
+  map.add(layer);
+  await layer.load();
+  return layer;
 }
 
 function registerFields(layer){
@@ -222,6 +220,37 @@ function updateSlider(v){$('nowClip').style.left=`${v}%`;const img=$('nowClip').
 function openContribute(title='Help build the archive',notes=''){$('contributeTitle').textContent=title;const p=$('contributeModal').querySelector('p:not(.eyebrow)');p.textContent=notes||'The public contribution workflow is still being developed. The finished Atlas can invite people to upload photographs or objects, identify mystery images, and add context about people, vessels, businesses, and places.';$('contributeModal').classList.add('open');$('contributeModal').setAttribute('aria-hidden','false');}
 function closeModal(id){$(id).classList.remove('open');$(id).setAttribute('aria-hidden','true')}
 
+async function nearestFeatureFromClick(event){
+  if(!state.layer || !state.view || !event?.mapPoint) return null;
+  try{
+    const q=state.layer.createQuery();
+    q.where=activeWhere();
+    q.geometry=event.mapPoint;
+    // Convert roughly 18 screen pixels to map units; enforce a useful touch target.
+    const metersPerPixel=Number(state.view.resolution)||2;
+    q.distance=Math.max(25, metersPerPixel*18);
+    q.units='meters';
+    q.spatialRelationship='intersects';
+    q.outFields=['*'];
+    q.returnGeometry=true;
+    q.num=20;
+    const fs=await state.layer.queryFeatures(q);
+    if(!fs.features.length) return null;
+    const click={x:event.x,y:event.y};
+    let best=null,bestD=Infinity;
+    for(const f of fs.features){
+      const pt=state.view.toScreen(f.geometry);
+      if(!pt) continue;
+      const d=Math.hypot(pt.x-click.x,pt.y-click.y);
+      if(d<bestD){bestD=d;best=f;}
+    }
+    return bestD<=28 ? best : null;
+  }catch(e){
+    console.warn('Nearest-feature fallback failed.',e);
+    return null;
+  }
+}
+
 async function initMap(){
   const mapEl=$('memoryMap');state.mapEl=mapEl;
   try{
@@ -232,11 +261,14 @@ async function initMap(){
     state.view=mapEl.view;
     state.view.on('click',async event=>{
       try{
+        let selected=null;
         const hit=await state.view.hitTest(event,{include:[layer]});
         const result=(hit.results||[]).find(r=>r?.graphic && (r.graphic.layer===layer || r.graphic.layer?.url===layer.url || r.graphic.sourceLayer?.url===layer.url));
-        if(result?.graphic){
-          const full=await hydrateHitGraphic(result.graphic);
-          await selectFeature(full);
+        if(result?.graphic) selected=await hydrateHitGraphic(result.graphic);
+        if(!selected) selected=await nearestFeatureFromClick(event);
+        if(selected){
+          await selectFeature(selected);
+          $('mapNote').textContent='Photo opened — use “Back to map” to continue exploring.';
         }
       }catch(err){console.warn('Mapped Memories click selection failed.',err);}
     });
