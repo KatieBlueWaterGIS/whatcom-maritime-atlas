@@ -1,31 +1,13 @@
-# Whatcom Maritime Storytelling Atlas — GitHub Pages build
+# Whatcom Maritime Storytelling Atlas — GitHub Pages build v11
 
-This folder is prepared specifically for GitHub Pages.
+This build is ready to upload directly to the root of the `whatcom-maritime-atlas` GitHub repository.
+
+## V11 homepage changes
+- Top-left Atlas brand now uses the same Cormorant Garamond display treatment as the main Atlas title.
+- Hero descriptor revised to: “A digital platform connecting maps, historic photos, oral histories, and living waterfront stories across Bellingham Bay.”
+- Removed the second “One shared URL…” sentence.
+- Replaced the emoji seafood icon with a custom single-color line-art fish badge matching the other portal icons.
+- Added explicit webfont loading for Cormorant Garamond and Montserrat for more consistent typography.
 
 ## Upload
-Upload **all files in this folder directly to the root of the GitHub repository**. Do not upload the ZIP itself and do not put these files inside another folder.
-
-The repository root should contain files such as:
-- index.html
-- mapped.html
-- tides.html
-- styles.css
-- mapped.js
-- tides.js
-- atlas-aerial.png
-- icon-hub.png
-- icon-memories.png
-- icon-tides.png
-- icon-voices.png
-- .nojekyll
-
-## GitHub Pages
-Repository Settings → Pages → Deploy from a branch → `main` → `/(root)`.
-
-Expected URLs:
-- Hub: `/whatcom-maritime-atlas/`
-- Tides: `/whatcom-maritime-atlas/tides.html`
-- Mapped Memories: `/whatcom-maritime-atlas/mapped.html`
-
-## Why assets are flat
-All image assets are deliberately stored at the repository root and referenced with relative filenames. This avoids folder upload, capitalization, and path issues on GitHub Pages.
+Upload **all files in this folder** to the repository root and overwrite files with the same names. Ensure `icon-seafood.svg` is included.
