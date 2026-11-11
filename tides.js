@@ -173,83 +173,48 @@ function themeType(label) {
   return "other";
 }
 function themeColor(label){
-  // Colors sampled from the approved Tides of Change sign-post mockup.
-  return {
-    fishing:"#0C5F6E",
-    lumber:"#5B7630",
-    boatbuilding:"#E36729",
-    orca:"#012643",
-    other:"#60717A"
-  }[themeType(label)] || "#60717A";
+  return {fishing:"#0B5F68",lumber:"#5B7630",boatbuilding:"#E36729",orca:"#012840",other:"#60717A"}[themeType(label)] || "#60717A";
 }
 
 function iconSvg(type, circle = false) {
-  const bg = {
-    fishing:"#0C5F6E",
-    lumber:"#5B7630",
-    boatbuilding:"#E36729",
-    orca:"#012643",
-    other:"#0C5F6E"
-  }[type] || "#0C5F6E";
+  const stroke = circle ? '#fff' : 'currentColor';
+  const common = `fill="none" stroke="${stroke}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"`;
+  let art = '';
 
-  const wrapStart = circle ? `<circle cx="32" cy="32" r="30" fill="${bg}"/>` : "";
-  const stroke = circle ? "#fff" : "currentColor";
-  const common = `fill="none" stroke="${stroke}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"`;
-  let art = "";
-
-  // Fishing & Canning: compact workboat/trawler silhouette like the sign-post graphic.
-  if(type === "fishing") {
-    art = `
-      <path ${common} d="M11 39h42l-5 8c-2 4-7 6-13 6H24c-6 0-10-2-12-6z"/>
-      <path ${common} d="M20 39V27h18l7 12"/>
-      <path ${common} d="M25 27v-8h9v8M34 20h7l4 5"/>
-      <path ${common} d="M28 19V13"/>
-      <path ${common} d="M14 54c6 3 12 3 18 0 6 3 12 3 18 0"/>
-    `;
+  // Fishing & Canning — small working fishing boat, matching the sign concept.
+  if(type === 'fishing') {
+    art = `<path ${common} d="M11 39h42l-5 8c-2 4-7 6-13 6H24c-6 0-10-2-12-6z"/>
+      <path ${common} d="M20 39V28h18l7 11M25 28v-8h10v8M29 20v-7M29 14h8l5 5"/>
+      <path ${common} d="M13 55c6 3 12 3 18 0 6 3 12 3 19 0"/>`;
   }
-  // Lumber: three conifers matching the sign-post family.
-  else if(type === "lumber") {
-    art = `
-      <path d="M17 13 9 28h5L7 40h8v11h4V40h8l-7-12h5z" fill="${stroke}" stroke="none"/>
-      <path d="M33 8 24 25h6l-8 15h9v14h4V40h9l-8-15h6z" fill="${stroke}" stroke="none"/>
-      <path d="M49 16 42 29h5l-6 11h7v11h4V40h7l-7-11h5z" fill="${stroke}" stroke="none"/>
-    `;
+  // Lumber — three conifers like the sign.
+  else if(type === 'lumber') {
+    art = `<path d="M17 14 9 28h5L7 40h8v11h4V40h8l-7-12h5z" fill="${stroke}"/>
+      <path d="M33 8 24 25h6l-8 15h9v14h4V40h9l-8-15h6z" fill="${stroke}"/>
+      <path d="M49 16 42 29h5l-6 11h7v11h4V40h7l-7-11h5z" fill="${stroke}"/>`;
   }
-  // Boatbuilding: sailboat like the orange sign-post icon.
-  else if(type === "boatbuilding") {
-    art = `
-      <path ${common} d="M31 10v32"/>
-      <path d="M29 13 15 37h14z" fill="${stroke}" stroke="none"/>
-      <path d="M34 17 47 37H34z" fill="${stroke}" stroke="none"/>
-      <path ${common} d="M12 42h40l-5 8H19z"/>
-      <path ${common} d="M15 54c6 3 12 3 17 0 6 3 12 3 17 0"/>
-    `;
+  // Boatbuilding — sailboat matching the sign-post icon.
+  else if(type === 'boatbuilding') {
+    art = `<path ${common} d="M31 10v32"/>
+      <path d="M29 13 15 37h14z" fill="${stroke}"/>
+      <path d="M34 17 47 37H34z" fill="${stroke}"/>
+      <path ${common} d="M12 42h40l-5 8H19zM15 54c6 3 12 3 17 0 6 3 12 3 17 0"/>`;
   }
-  // Environmental: unmistakable orca silhouette, not a dolphin.
-  else if(type === "orca") {
-    art = `
-      <path d="M9 34c7-10 17-15 30-13 6 1 10 4 14 8l5-5-2 10 2 8-7-4c-5 7-14 11-24 9-8-1-14-6-18-13z"
-            fill="${stroke}" stroke="none"/>
-      <path d="M31 22c1-7 5-11 11-13-1 7-4 11-9 14z" fill="${stroke}" stroke="none"/>
-      <path d="M20 34c3-5 8-7 13-5-2 6-7 9-13 5z" fill="${circle ? bg : '#fff'}" opacity=".95"/>
-      <path d="M38 28c3-2 6-1 8 2-3 2-6 2-8-2z" fill="${circle ? bg : '#fff'}" opacity=".95"/>
-    `;
+  // Environmental — unmistakable ORCA: tall dorsal fin + white eye/saddle patches.
+  else if(type === 'orca') {
+    art = `<path d="M8 35c8-10 19-15 31-13 6 1 11 4 15 8l6-5-3 10 3 8-8-4c-6 8-15 11-25 9-9-2-15-7-19-13z" fill="${stroke}"/>
+      <path d="M31 23c1-8 5-13 12-16-1 8-5 13-10 17z" fill="${stroke}"/>
+      <path d="M19 35c4-6 9-8 15-5-3 6-8 9-15 5z" fill="currentColor" opacity="0"/>
+      <path d="M20 34c4-5 9-6 13-3-2 5-7 7-13 3z" fill="#012840" opacity="${circle ? 1 : 0}"/>
+      <path d="M39 28c3-2 7-1 9 2-3 3-7 3-9-2z" fill="#012840" opacity="${circle ? 1 : 0}"/>`;
   }
-  else {
-    art = `<path ${common} d="M32 11v42M11 32h42M18 18l28 28M46 18 18 46"/>`;
-  }
-
-  return `<svg viewBox="0 0 64 64" aria-hidden="true">${wrapStart}${art}</svg>`;
+  else art = `<path ${common} d="M32 11v42M11 32h42M18 18l28 28M46 18 18 46"/>`;
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">${art}</svg>`;
 }
-
 function themeIconMarkup(label) { return iconSvg(themeType(label), false); }
 function themeMarkerUrl(label) {
   const color = themeColor(label);
-  // Deliberately simple on-map marker: theme color is the cue; icons stay in the legend.
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
-    <circle cx="20" cy="20" r="16" fill="${color}" stroke="#fffaf1" stroke-width="4"/>
-    <circle cx="20" cy="20" r="4.5" fill="#fffaf1"/>
-  </svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="${color}" stroke="#fffaf1" stroke-width="4"/><circle cx="20" cy="20" r="4.5" fill="#fffaf1"/></svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
@@ -292,45 +257,34 @@ function buildThemeFilters() {
 
 
 const storyThumbnailCache = new Map();
-
 function storyMapItemId(url) {
-  const match = String(url || "").match(/(?:storymaps\.arcgis\.com\/stories\/|arcgis\.com\/apps\/storymaps\/stories\/)([a-f0-9]{32})/i);
-  return match ? match[1] : "";
+  const match = String(url || '').match(/(?:storymaps\.arcgis\.com\/stories\/|arcgis\.com\/apps\/storymaps\/stories\/)([a-f0-9]{32})/i);
+  return match ? match[1] : '';
 }
-
 async function storyMapThumbnail(url) {
   const itemId = storyMapItemId(url);
-  if (!itemId) return "";
+  if (!itemId) return '';
   if (storyThumbnailCache.has(itemId)) return storyThumbnailCache.get(itemId);
-
   try {
     const response = await fetch(`https://www.arcgis.com/sharing/rest/content/items/${itemId}?f=json`);
     const item = await response.json();
-    const thumb = item?.thumbnail;
-    const thumbUrl = thumb
-      ? `https://www.arcgis.com/sharing/rest/content/items/${itemId}/info/${encodeURIComponent(thumb)}`
-      : "";
+    const thumb = item && item.thumbnail;
+    const thumbUrl = thumb ? `https://www.arcgis.com/sharing/rest/content/items/${itemId}/info/${encodeURIComponent(thumb)}` : '';
     storyThumbnailCache.set(itemId, thumbUrl);
     return thumbUrl;
-  } catch (e) {
-    storyThumbnailCache.set(itemId, "");
-    return "";
-  }
+  } catch(e) { storyThumbnailCache.set(itemId,''); return ''; }
 }
-
 async function applyStoryCardImage(node, graphic) {
   const attrs = graphic.attributes || {};
   const direct = extractImageUrl(attrs);
   if (direct) {
-    node.querySelector(".story-thumb").style.backgroundImage = `url("${direct.replace(/"/g, "%22")}")`;
+    node.querySelector('.story-thumb').style.backgroundImage = `url("${direct.replace(/"/g,'%22')}")`;
     return;
   }
   const storyUrl = extractStoryUrl(attrs);
   if (!storyUrl) return;
   const thumbnail = await storyMapThumbnail(storyUrl);
-  if (thumbnail && node.isConnected) {
-    node.querySelector(".story-thumb").style.backgroundImage = `url("${thumbnail.replace(/"/g, "%22")}")`;
-  }
+  if (thumbnail && node.isConnected) node.querySelector('.story-thumb').style.backgroundImage = `url("${thumbnail.replace(/"/g,'%22')}")`;
 }
 
 function renderStories() {
