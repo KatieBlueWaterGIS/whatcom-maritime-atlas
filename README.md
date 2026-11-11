@@ -1,14 +1,15 @@
-# Whatcom Maritime Storytelling Atlas — v18
+# Whatcom Maritime Storytelling Atlas — v19
 
-Tides of Change visual update:
-- Theme colors now match the approved trail-sign mockup.
-- Fishing & Canning: teal (#0C5F6E)
-- Lumber/Timber: green (#5B7630)
-- Boatbuilding: orange (#E36729)
-- Environmental & Orcas: deep navy (#012643)
-- Top theme filters use matching sign-style icons, including an ORCA (not dolphin).
-- Map points use the exact same theme colors with clean dot markers.
-- Right-side story cards use theme-colored outlines instead of overlaid theme icons.
-- Story-card imagery prioritizes the layer image field and falls back to the public StoryMap item thumbnail when available.
+Tides of Change correction build.
 
-Upload all files to the GitHub repository root, replacing the prior version.
+IMPORTANT: Upload **all files** to the GitHub repository root, including the new `styles-v19.css` and `tides-v19.js`. `tides.html` now references those unique filenames, which prevents the browser from loading the previous cached Tides assets.
+
+Tides visual system:
+- Fishing & Canning: #0C5F6E teal
+- Lumber/Timber: #5B7630 green
+- Boatbuilding: #E36729 orange
+- Environmental & Orcas: #012643 navy
+- Same colors: top theme controls, map points, and story-card outlines.
+- Theme icons appear in the top controls only. Environmental uses an orca.
+- Story cards have no category icon overlay.
+- Card image tries feature image first, then StoryMap item thumbnail.
