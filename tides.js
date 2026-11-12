@@ -513,14 +513,18 @@ if (dom.storyViewerScrim) dom.storyViewerScrim.addEventListener("click", closeSt
 if (dom.storyFrame) dom.storyFrame.addEventListener("load", () => dom.storyFrameLoading?.classList.add("hidden"));
 document.addEventListener("keydown", event => { if (event.key === "Escape") closeStoryViewer(); });
 
-dom.menuButton.addEventListener("click", () => {
-  const open = document.body.classList.toggle("nav-open");
-  dom.menuButton.setAttribute("aria-expanded", String(open));
-});
+if (dom.menuButton) {
+  dom.menuButton.addEventListener("click", () => {
+    const open = document.body.classList.toggle("nav-open");
+    dom.menuButton.setAttribute("aria-expanded", String(open));
+  });
+}
 
-dom.siteNav.addEventListener("click", () => {
-  document.body.classList.remove("nav-open");
-  dom.menuButton.setAttribute("aria-expanded", "false");
-});
+if (dom.siteNav) {
+  dom.siteNav.addEventListener("click", () => {
+    document.body.classList.remove("nav-open");
+    if (dom.menuButton) dom.menuButton.setAttribute("aria-expanded", "false");
+  });
+}
 
 initArcGIS();
